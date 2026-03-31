@@ -6,7 +6,7 @@
 <title>IGAW LetterLab</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&family=Nanum+Gothic:wght@400;700;800&display=swap">
-<link rel="stylesheet" href="style.css?v=144">
+<link rel="stylesheet" href="style.css?v=190">
 </head>
 <body>
 <aside id="sidebar" class="sidebar">
@@ -14,11 +14,9 @@
   <div class="sidebar-tab-bar">
     <button class="sidebar-tab active" data-tab="history">히스토리</button>
     <button class="sidebar-tab" data-tab="drafts">임시저장</button>
-    <button class="sidebar-tab" data-tab="designs">디자인</button>
   </div>
   <div id="history-list" class="history-list"><p class="history-empty">아직 생성된 뉴스레터가 없습니다.</p></div>
   <div id="drafts-list" class="history-list" style="display:none"><p class="history-empty">임시저장된 뉴스레터가 없습니다.</p></div>
-  <div id="designs-list" class="history-list" style="display:none"><p class="history-empty">저장된 디자인이 없습니다.</p></div>
 </aside>
 <main class="main-content">
   <header class="topbar">
@@ -40,18 +38,24 @@
           <span class="url-drag-handle"></span>
           <div class="url-row-inner">
             <div class="url-row-top">
-              <div class="url-row-main"><span class="url-icon">&#128196;</span><input type="url" class="url-field" placeholder="분석할 리포트 URL을 입력하세요"></div>
-              <select class="url-tag-select"><option value="auto">플랫폼 AI 자동분류</option><option value="디파이너리">디파이너리</option><option value="트레이딩웍스360">트레이딩웍스360</option><option value="모바일인덱스INSIGHT">모바일인덱스INSIGHT</option><option value="TVIndex">TVIndex</option><option value="Fixfolio">Fixfolio</option><option value="아이지에이웍스">아이지에이웍스</option></select>
-              <input type="text" class="url-volume-input" placeholder="예: 소제목 3개, 5줄">
+              <div class="url-row-main"><span class="url-icon">&#128196;</span><input type="url" class="url-field" placeholder="뉴스레터로 작성할 콘텐츠 URL을 입력하세요"></div>
               <button class="url-remove-btn">&#10005;</button>
+            </div>
+            <div style="display:flex;gap:6px;align-items:center">
+              <select class="url-tag-select"><option value="auto">🏷 플랫폼 자동분류</option><option value="아이지에이웍스">아이지에이웍스</option><option value="디파이너리">디파이너리</option><option value="트레이딩웍스360">트레이딩웍스360</option><option value="모바일인덱스INSIGHT">모바일인덱스INSIGHT</option><option value="TVIndex">TVIndex</option><option value="Fixfolio">Fixfolio</option><option value="Fixtype">Fixtype</option></select>
+              <select class="url-style-select"><option value="subtitle">📝 소제목형</option><option value="prose">📄 줄글형</option></select>
+              <input type="text" class="url-volume-input" placeholder="분량 (예: 소제목 3개)">
             </div>
             <input type="url" class="url-tracking-input" placeholder="&#128279; 트래킹 링크 (이미지 클릭 시 이동 URL)">
           </div>
         </div>
       </div>
       <div class="input-card-actions">
-        <button id="add-url-btn" class="add-link-btn">+ 링크 추가하기</button>
-        <button id="generate-btn" class="generate-fab"><span class="fab-arrow">&uarr;</span></button>
+        <button id="add-url-btn" class="add-link-btn">링크 추가하기</button>
+        <div style="display:flex;align-items:center;gap:8px">
+          <input type="date" id="nl-date" style="padding:6px 10px;border:1px solid var(--border);border-radius:10px;font-size:12px;color:var(--sub);outline:none;background:var(--white);cursor:pointer" title="뉴스레터 발행일">
+          <button id="generate-btn" class="generate-fab"><span class="fab-arrow">&uarr;</span></button>
+        </div>
       </div>
     </div>
     <div id="loading" class="loading hidden"><div class="spinner"></div><span>뉴스레터를 생성하고 있습니다...</span></div>
@@ -59,21 +63,20 @@
     <div id="recent-section" class="recent-section"><div class="recent-header">RECENT</div><div id="recent-list" class="recent-list"></div></div>
   </section>
 
+  <div id="title-candidates" class="title-candidates hidden"></div>
   <section id="editor-toolbar" class="editor-toolbar hidden">
     <div class="toolbar-group">
-      <button id="edit-toggle" class="toolbar-toggle-btn">&#9998; Edit</button>
-      <button id="compare-toggle" class="toolbar-toggle-btn">원본 대조</button>
+      <button id="edit-toggle" class="toolbar-toggle-btn">✏️ Edit</button>
+      <button id="compare-toggle" class="toolbar-toggle-btn">🔍 원본 대조</button>
     </div>
     <div class="toolbar-sep"></div>
     <div class="toolbar-group">
-      <button id="preview-btn" class="toolbar-btn">미리보기</button>
-      <button id="save-draft-btn" class="toolbar-btn">임시저장</button>
-      <button id="save-tpl-btn" class="toolbar-btn">디자인 저장</button>
+      <button id="preview-btn" class="toolbar-btn">🖥 미리보기</button>
+      <button id="save-draft-btn" class="toolbar-btn">💾 임시저장</button>
     </div>
     <div class="toolbar-sep"></div>
     <div class="toolbar-group">
-      <button id="copy-html-btn" class="btn-primary btn-sm">Copy HTML</button>
-      <button id="regenerate-btn" class="toolbar-btn" style="margin-left:4px">&#8634; 재생성</button>
+      <button id="copy-html-btn" class="btn-primary btn-sm">📋 Copy HTML</button>
     </div>
   </section>
   <section id="panels" class="panels hidden">
@@ -84,17 +87,16 @@
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border)"><span style="font-size:14px;font-weight:800;color:var(--text)">도구</span><button id="ep-close" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--light);padding:0 4px">&times;</button></div>
       <div class="ep-section" id="ep-selected" style="display:none"><div class="ep-label">선택된 요소</div><div id="ep-selected-content"></div></div>
       <div class="ep-section"><div class="ep-label">글씨</div>
-        <select id="font-family" class="ep-select"><option value="Noto Sans KR, sans-serif" selected>Noto Sans KR</option><option value="Pretendard, sans-serif">Pretendard</option><option value="Nanum Gothic, sans-serif">나눔고딕</option><option value="Arial, sans-serif">Arial</option><option value="Georgia, serif">Georgia</option></select>
-        <div class="ep-row"><select id="font-size" class="ep-select" style="flex:1"><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16" selected>16</option><option value="18">18</option><option value="20">20</option><option value="22">22</option><option value="24">24</option><option value="28">28</option><option value="32">32</option></select><span style="font-size:10px;color:var(--light);margin-left:4px">px</span></div>
+        <div class="ep-row" style="gap:6px"><select id="font-family" class="ep-select" style="flex:2;margin-bottom:0"><option value="Noto Sans KR, sans-serif" selected>Noto Sans KR</option><option value="Pretendard, sans-serif">Pretendard</option><option value="Nanum Gothic, sans-serif">나눔고딕</option><option value="Arial, sans-serif">Arial</option><option value="Georgia, serif">Georgia</option></select><select id="font-size" class="ep-select" style="flex:1;margin-bottom:0"><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16" selected>16</option><option value="18">18</option><option value="20">20</option><option value="22">22</option><option value="24">24</option><option value="28">28</option><option value="32">32</option></select><span style="font-size:10px;color:var(--light)">px</span></div>
       </div>
       <div class="ep-section"><div class="ep-label">서식</div><div class="ep-row"><button class="ep-fmt" data-cmd="bold"><b>B</b></button><button class="ep-fmt" data-cmd="italic"><i>I</i></button><button class="ep-fmt" data-cmd="underline"><u>U</u></button><button class="ep-fmt" data-cmd="strikeThrough"><s>S</s></button></div></div>
-      <div class="ep-section"><div class="ep-label">정렬</div><div class="ep-row"><button class="ep-fmt" data-cmd="justifyLeft" style="font-size:11px">&#9776; 좌</button><button class="ep-fmt" data-cmd="justifyCenter" style="font-size:11px">&#9776; 중</button><button class="ep-fmt" data-cmd="justifyRight" style="font-size:11px">&#9776; 우</button></div></div>
+      <div class="ep-section"><div class="ep-label">정렬</div><div class="ep-row"><button class="ep-fmt" data-cmd="justifyLeft">☰ 좌</button><button class="ep-fmt" data-cmd="justifyCenter">☰ 중</button><button class="ep-fmt" data-cmd="justifyRight">☰ 우</button></div></div>
       <div class="ep-section"><div class="ep-label">글씨 색상</div>
-        <div class="ep-row" style="margin-bottom:4px"><input type="text" id="font-color-hex" placeholder="#000000" style="flex:1;padding:6px 8px;border:1px solid var(--border);border-radius:8px;font-size:11px;font-family:monospace;outline:none" maxlength="7"><input type="color" id="font-color" value="#333333" style="width:32px;height:32px;border:1px solid var(--border);border-radius:8px;cursor:pointer;padding:1px"></div>
-        <div class="ep-row"><input type="text" id="bg-color-hex" placeholder="배경 #FFFF00" style="flex:1;padding:6px 8px;border:1px solid var(--border);border-radius:8px;font-size:11px;font-family:monospace;outline:none" maxlength="7"><input type="color" id="bg-color" value="#ffffff" style="width:32px;height:32px;border:1px solid var(--border);border-radius:8px;cursor:pointer;padding:1px"></div>
+        <div class="ep-row" style="gap:6px;margin-bottom:4px"><span style="font-size:11px;color:var(--light);width:24px;flex-shrink:0">글씨</span><input type="text" id="font-color-hex" placeholder="#000000" style="width:70px;padding:5px 6px;border:1px solid var(--border);border-radius:6px;font-size:11px;font-family:monospace;outline:none" maxlength="7"><input type="color" id="font-color" value="#333333" style="width:28px;height:28px;border:1px solid var(--border);border-radius:6px;cursor:pointer;padding:1px;flex-shrink:0"><span style="font-size:11px;color:var(--light);width:24px;flex-shrink:0;margin-left:8px">배경</span><input type="text" id="bg-color-hex" placeholder="#FFFFFF" style="width:70px;padding:5px 6px;border:1px solid var(--border);border-radius:6px;font-size:11px;font-family:monospace;outline:none" maxlength="7"><input type="color" id="bg-color" value="#ffffff" style="width:28px;height:28px;border:1px solid var(--border);border-radius:6px;cursor:pointer;padding:1px;flex-shrink:0"></div>
       </div>
-      <div class="ep-section"><div class="ep-label">줄간격</div><select id="line-height-select" class="ep-select"><option value="1.4">1.4</option><option value="1.6">1.6</option><option value="1.7">1.7</option><option value="1.8" selected>1.8</option><option value="2.0">2.0</option><option value="2.4">2.4</option></select></div>
-      <div class="ep-section"><div class="ep-label">자간</div><select id="letter-spacing-select" class="ep-select"><option value="-0.5px">-0.5</option><option value="-0.27px" selected>-0.27</option><option value="-0.2px">-0.2</option><option value="0px">0</option><option value="0.5px">0.5</option><option value="1px">1.0</option></select></div>
+      <div class="ep-section"><div class="ep-label">줄간격 / 자간</div>
+        <div class="ep-row" style="gap:6px"><select id="line-height-select" class="ep-select" style="flex:1;margin-bottom:0"><option value="1.4">1.4</option><option value="1.6">1.6</option><option value="1.7">1.7</option><option value="1.8" selected>1.8</option><option value="2.0">2.0</option><option value="2.4">2.4</option></select><select id="letter-spacing-select" class="ep-select" style="flex:1;margin-bottom:0"><option value="-0.5px">-0.5</option><option value="-0.27px" selected>-0.27</option><option value="-0.2px">-0.2</option><option value="0px">0</option><option value="0.5px">0.5</option><option value="1px">1.0</option></select></div>
+      </div>
       <div class="ep-section"><div class="ep-label">삽입</div>
         <div class="ep-grid">
           <button class="ep-insert" id="insert-link-btn">&#128279;<span>링크</span></button>
@@ -125,10 +127,113 @@
 <div id="hr-modal" class="modal hidden"><div class="modal-content"><h3>구분선</h3><label>색상</label><input type="color" id="hr-color" value="#D5D2CA"><label>스타일</label><select id="hr-style" style="width:100%;padding:8px;border:1px solid #E2E8F0;border-radius:8px;font-size:13px;outline:none;margin-bottom:8px"><option value="solid">실선</option><option value="dashed">대시</option><option value="dotted">점선</option></select><label>두께: <span id="hr-width-val">1</span>px</label><input type="range" id="hr-width" value="1" min="0.5" max="5" step="0.5" style="width:100%"><div class="modal-actions"><button id="hr-cancel" class="btn-ghost">취소</button><button id="hr-delete" class="btn-danger btn-sm">삭제</button><button id="hr-confirm" class="btn-primary btn-sm">적용</button></div></div></div>
 <div id="spacer-modal" class="modal hidden"><div class="modal-content"><h3>공백</h3><label>높이: <span id="spacer-height-val">32</span>px</label><input type="range" id="spacer-height" value="32" min="4" max="200" step="4" style="width:100%"><div class="modal-actions"><button id="spacer-cancel" class="btn-ghost">취소</button><button id="spacer-delete" class="btn-danger btn-sm">삭제</button><button id="spacer-confirm" class="btn-primary btn-sm">적용</button></div></div></div>
 <div id="preview-modal" class="modal hidden"><div class="modal-content" style="width:680px;max-height:90vh;padding:16px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h3 style="margin:0">이메일 미리보기 (600px)</h3><button id="preview-close" class="btn-ghost" style="padding:4px 12px">&times;</button></div><div style="background:#F1F5F9;padding:20px;border-radius:8px;overflow-y:auto;max-height:70vh"><div id="preview-frame" style="width:600px;margin:0 auto;background:#fff;box-shadow:0 2px 20px rgba(0,0,0,.08)"></div></div></div></div>
-<div id="tpl-modal" class="modal hidden"><div class="modal-content" style="width:480px;max-height:80vh"><h3>저장된 디자인</h3><div id="tpl-list" style="max-height:50vh;overflow-y:auto;margin-bottom:16px"></div><div class="modal-actions"><button id="tpl-close" class="btn-ghost">닫기</button></div></div></div>
+
 <div id="settings-modal" class="modal hidden"><div class="modal-content" style="width:440px"><h3>설정</h3><div style="margin-bottom:16px"><label style="font-size:12px;font-weight:600;color:#475569;margin-bottom:6px;display:block">Gemini API 키</label><div style="display:flex;gap:6px"><input type="password" id="api-key-input" placeholder="Gemini API 키를 입력하세요" style="flex:1"><button id="api-key-save" class="btn-sm">저장</button></div><span id="api-key-status" style="font-size:11px;color:#6366F1;margin-top:4px;display:block"></span></div><div style="margin-bottom:16px"><label style="font-size:12px;font-weight:600;color:#475569;margin-bottom:6px;display:block">imgbb API 키 <span style="font-size:10px;color:#94A3B8">(이미지 자동 업로드)</span></label><div style="display:flex;gap:6px"><input type="password" id="imgbb-key-input" placeholder="imgbb API 키를 입력하세요" style="flex:1"><button id="imgbb-key-save" class="btn-sm">저장</button></div><span id="imgbb-key-status" style="font-size:11px;color:#6366F1;margin-top:4px;display:block"></span></div><div class="modal-actions"><button id="settings-close" class="btn-primary btn-sm">닫기</button></div></div></div>
-<div id="guide-modal" class="modal hidden"><div class="modal-content" style="width:600px;max-height:85vh;overflow-y:auto"><h3>IGAW LetterLab 가이드</h3><div style="font-size:13px;line-height:1.9;color:#334155"><div style="background:#FBFBFF;border-radius:12px;padding:16px 20px;margin:16px 0"><div style="font-weight:800;font-size:14px;margin-bottom:8px">&#9881; API 키 설정</div><div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:6px"><span style="color:#6366F1;font-weight:700;flex-shrink:0">1.</span><span><a href="https://aistudio.google.com/apikey" target="_blank" style="color:#6366F1;font-weight:600">aistudio.google.com/apikey</a> 접속 (Google 로그인)</span></div><div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:6px"><span style="color:#6366F1;font-weight:700;flex-shrink:0">2.</span><span><b>Create API Key</b> 클릭 &rarr; 키 복사</span></div><div style="display:flex;gap:8px;align-items:flex-start"><span style="color:#6366F1;font-weight:700;flex-shrink:0">3.</span><span>우측 상단 <b>&#9881;</b> 설정 &rarr; Gemini API 키에 붙여넣기 &rarr; 저장</span></div></div><div style="background:#FBFBFF;border-radius:12px;padding:16px 20px;margin:16px 0"><div style="font-weight:800;font-size:14px;margin-bottom:8px">&#128196; 뉴스레터 생성</div><div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:6px"><span style="color:#6366F1;flex-shrink:0">&#10148;</span><span>분석할 리포트/블로그 <b>URL</b>을 입력합니다</span></div><div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:6px"><span style="color:#6366F1;flex-shrink:0">&#10148;</span><span><b>플랫폼</b>을 선택하거나 AI 자동분류로 둡니다</span></div><div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:6px"><span style="color:#6366F1;flex-shrink:0">&#10148;</span><span><b>분량</b>을 지정할 수 있습니다 (예: 5줄, 500자)</span></div><div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:6px"><span style="color:#6366F1;flex-shrink:0">&#10148;</span><span><b>트래킹 링크</b>를 입력하면 이미지와 원문 보기에 자동 링크</span></div><div style="display:flex;gap:8px;align-items:flex-start"><span style="color:#6366F1;flex-shrink:0">&#10148;</span><span><b>+ 링크 추가</b>로 여러 URL = 멀티 섹션 뉴스레터</span></div></div><div style="background:#FBFBFF;border-radius:12px;padding:16px 20px;margin:16px 0"><div style="font-weight:800;font-size:14px;margin-bottom:8px">&#9998; 편집 모드</div><div style="display:grid;grid-template-columns:auto 1fr;gap:4px 10px;font-size:12px"><span style="color:#94A3B8">텍스트</span><span>클릭해서 바로 수정</span><span style="color:#94A3B8">박스</span><span>클릭 &rarr; 우측 패널에서 설정</span><span style="color:#94A3B8">이미지</span><span>클릭=수정 / 드래그=이동 / 우하단=크기 조절</span><span style="color:#94A3B8">구분선</span><span>클릭 &rarr; 색상/두께/스타일 변경</span><span style="color:#94A3B8">부분 재생성</span><span>텍스트 선택 &rarr; 플로팅 버튼 클릭</span></div></div><div style="background:#FBFBFF;border-radius:12px;padding:16px 20px;margin:16px 0"><div style="font-weight:800;font-size:14px;margin-bottom:8px">&#128444; 이미지</div><div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:6px"><span style="color:#22C55E;flex-shrink:0">&#10003;</span><span>파일 업로드 &rarr; 자동 URL 변환</span></div><div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:6px"><span style="color:#22C55E;flex-shrink:0">&#10003;</span><span>Wix에서 이미지 우클릭 &rarr; 주소 복사</span></div><div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:6px"><span style="color:#DC2626;flex-shrink:0">&#10007;</span><span>Google Drive 링크는 이메일에서 안 보임</span></div><div style="display:flex;gap:8px;align-items:flex-start"><span style="color:#DC2626;flex-shrink:0">&#10007;</span><span>복사-붙여넣기(base64)는 이메일에서 차단됨</span></div></div><div style="background:#FBFBFF;border-radius:12px;padding:16px 20px;margin:16px 0"><div style="font-weight:800;font-size:14px;margin-bottom:8px">&#8634; 부분 재생성 &amp; 수정 지시</div><div style="display:grid;grid-template-columns:auto 1fr;gap:4px 10px;font-size:12px"><span style="color:#94A3B8">재생성</span><span>텍스트 드래그 선택 &rarr; &#8634; 재생성 클릭 &rarr; 같은 톤으로 다시 작성</span><span style="color:#94A3B8">수정 지시</span><span>텍스트 선택 &rarr; &#9998; 수정 지시 &rarr; "더 짧게", "수치 강조" 등 입력 &rarr; 적용</span><span style="color:#94A3B8">컨텍스트</span><span>전체 뉴스레터 내용을 참고해서 수정하므로 흐름에 맞게 작성됩니다</span></div></div><div style="background:#FBFBFF;border-radius:12px;padding:16px 20px;margin:16px 0"><div style="font-weight:800;font-size:14px;margin-bottom:8px">&#128203; 내보내기 &amp; 저장</div><div style="display:grid;grid-template-columns:auto 1fr;gap:4px 10px;font-size:12px"><span style="color:#94A3B8">Copy HTML</span><span>Stibee에 바로 붙여넣기</span><span style="color:#94A3B8">임시저장</span><span>이름 붙여 저장, 같은 이름은 자동 덮어쓰기</span><span style="color:#94A3B8">디자인 저장</span><span>스타일만 저장, 다른 글에 적용</span></div></div><div style="background:#FBFBFF;border-radius:12px;padding:16px 20px;margin:16px 0"><div style="font-weight:800;font-size:14px;margin-bottom:8px">&#128161; 알아두면 좋은 팁</div><div style="display:grid;grid-template-columns:auto 1fr;gap:4px 10px;font-size:12px"><span style="color:#94A3B8">분량 지정</span><span>"소제목 3개", "5줄", "500자" 등 자유롭게 입력</span><span style="color:#94A3B8">트래킹 링크</span><span>URL별로 입력하면 해당 섹션 이미지와 원문 보기에 자동 적용</span><span style="color:#94A3B8">섹션 순서</span><span>여러 URL 생성 시 도구 패널에서 드래그로 순서 변경</span><span style="color:#94A3B8">Gmail 제한</span><span>HTML 102KB 초과 시 잘림 &mdash; 이미지는 URL로, 불필요한 공백 줄이기</span><span style="color:#94A3B8">이미지 크기</span><span>우하단 모서리 드래그로 조절, 50% 근처에서 자동 스냅</span><span style="color:#94A3B8">블로그 링크</span><span>블로그 아티클 바로가기 &amp; 수신거부 링크는 자동 적용 &mdash; 수정 불필요</span></div></div><div style="background:#FBFBFF;border:1px solid #EDE9FE;border-radius:12px;padding:12px 20px;margin:16px 0;font-size:12px;color:#64748B"><b>단축키</b> &mdash; Ctrl+Z 되돌리기 / Ctrl+B 굵게 / Ctrl+I 기울임 / Ctrl+U 밑줄</div></div><div class="modal-actions"><button id="guide-close" class="btn-primary btn-sm">닫기</button></div></div></div>
+<div id="guide-modal" class="modal hidden"><div class="modal-content" style="width:560px;max-height:85vh;overflow-y:auto;padding:32px">
+<div style="text-align:center;margin-bottom:24px;position:relative">
+  <button id="guide-close-top" style="position:absolute;top:-8px;right:-8px;background:none;border:none;font-size:20px;cursor:pointer;color:#94A3B8;padding:4px">&times;</button>
+  <div style="font-size:28px;margin-bottom:8px">📬</div>
+  <h3 style="font-size:18px;font-weight:900;margin:0 0 4px">IGAW LetterLab 가이드</h3>
+  <p style="font-size:12px;color:#94A3B8;margin:0">처음이라면 여기서 시작하세요</p>
+</div>
+
+<div style="font-size:13px;line-height:2;color:#475569">
+
+<!-- 1 -->
+<div style="background:#F8FAFC;border-radius:14px;padding:18px 20px;margin-bottom:12px;border:1px solid #E2E8F0">
+  <div style="font-weight:800;font-size:14px;color:#111;margin-bottom:12px">1️⃣ Gemini API 키 설정</div>
+  뉴스레터 생성에 Gemini AI를 사용해요. 먼저 API 키가 필요합니다.<br><br>
+  <b>키 발급</b> <a href="https://aistudio.google.com/apikey" target="_blank" style="color:#6366F1;font-weight:600">aistudio.google.com/apikey</a>에서 Create API Key 클릭<br>
+  <b>등록</b> 우측 상단 ⚙ 설정에 붙여넣고 저장하면 준비 끝
+</div>
+
+<!-- 2 -->
+<div style="background:#F8FAFC;border-radius:14px;padding:18px 20px;margin-bottom:12px;border:1px solid #E2E8F0">
+  <div style="font-weight:800;font-size:14px;color:#111;margin-bottom:12px">2️⃣ 뉴스레터 생성</div>
+  뉴스레터로 만들고 싶은 콘텐츠 <b>URL</b>만 넣으면 AI가 알아서 작성해요.<br><br>
+  <div style="display:grid;grid-template-columns:80px 1fr;gap:4px 12px">
+    <span style="color:#111;font-weight:600">플랫폼</span><span>해당 콘텐츠의 솔루션을 선택하세요</span>
+    <span style="color:#111;font-weight:600">스타일</span><span>소제목형(기본)과 줄글형 중 선택</span>
+    <span style="color:#111;font-weight:600">분량</span><span>"소제목 3개", "5줄" 등 원하는 만큼 조절 가능</span>
+    <span style="color:#111;font-weight:600">트래킹 링크</span><span>입력 시 해당 섹션의 이미지·원문 보기 링크로 자동 연결</span>
+    <span style="color:#111;font-weight:600">링크 추가</span><span>URL 여러 개로 멀티 섹션 뉴스레터도 가능</span>
+    <span style="color:#111;font-weight:600">발행일</span><span>생성 버튼 옆 날짜로 지정</span>
+  </div>
+  <div style="margin-top:10px;padding-top:10px;border-top:1px solid #E2E8F0;font-size:12px;color:#94A3B8">
+    수신거부·블로그 아티클 바로가기 링크에는 트래킹 링크가 자동으로 적용됩니다.
+  </div>
+</div>
+
+<!-- 3 -->
+<div style="background:#F8FAFC;border-radius:14px;padding:18px 20px;margin-bottom:12px;border:1px solid #E2E8F0">
+  <div style="font-weight:800;font-size:14px;color:#111;margin-bottom:12px">3️⃣ 편집 모드</div>
+  Edit 버튼을 누르면 뉴스레터를 자유롭게 수정할 수 있어요.<br>
+  우측에 도구 패널이 열리고, 본문의 요소를 클릭하면 바로 편집됩니다.<br><br>
+  <div style="display:grid;grid-template-columns:80px 1fr;gap:4px 12px">
+    <span style="color:#111;font-weight:600">텍스트</span><span>클릭하면 바로 수정</span>
+    <span style="color:#111;font-weight:600">이미지</span><span>클릭해서 교체, 우하단 드래그로 크기 조절</span>
+    <span style="color:#111;font-weight:600">박스</span><span>클릭하면 우측 패널 상단에 설정이 나타나요</span>
+    <span style="color:#111;font-weight:600">구분선</span><span>클릭해서 색상·두께·스타일 변경</span>
+    <span style="color:#111;font-weight:600">섹션 순서</span><span>여러 URL일 때 드래그로 순서 변경</span>
+  </div>
+  <div style="margin-top:12px;padding-top:10px;border-top:1px solid #E2E8F0;font-size:12px;color:#94A3B8">
+    기본 글씨체 Noto Sans KR · 본문 16px · 소제목 18px Bold
+  </div>
+</div>
+
+<!-- 4 -->
+<div style="background:#F8FAFC;border-radius:14px;padding:18px 20px;margin-bottom:12px;border:1px solid #E2E8F0">
+  <div style="font-weight:800;font-size:14px;color:#111;margin-bottom:12px">4️⃣ 부분 내용 수정</div>
+  전체가 아니라 특정 문장만 고치고 싶을 때 유용해요.<br>
+  고치고 싶은 부분을 드래그로 선택하면 <b>수정 요청</b> 버튼이 뜹니다.<br>
+  "더 짧게", "수치 강조", "톤 부드럽게" 같이 입력하면 AI가 그 부분만 다시 써줘요.
+</div>
+
+<!-- 5 -->
+<div style="background:#F8FAFC;border-radius:14px;padding:18px 20px;margin-bottom:12px;border:1px solid #E2E8F0">
+  <div style="font-weight:800;font-size:14px;color:#111;margin-bottom:12px">5️⃣ 이미지</div>
+  <span style="color:#22C55E;font-weight:700">✓</span> 파일 업로드 → 자동 URL 변환<br>
+  <div style="background:#ECFDF5;border:1px solid #A7F3D0;border-radius:8px;padding:8px 12px;margin:6px 0;color:#065F46;font-weight:600;font-size:11px">💡 '업로드 완료' 표시 확인 후 반드시 <span style="background:#059669;color:#fff;padding:1px 8px;border-radius:4px">적용</span> 클릭</div>
+  <span style="color:#22C55E;font-weight:700">✓</span> Wix에서 이미지 우클릭 → 주소 복사<br>
+  <span style="color:#DC2626;font-weight:700">✗</span> Google Drive 링크 — 이메일에서 안 보임<br>
+  <span style="color:#DC2626;font-weight:700">✗</span> 복사-붙여넣기(base64) — 이메일에서 차단
+</div>
+
+<!-- 6 -->
+<div style="background:#F8FAFC;border-radius:14px;padding:18px 20px;margin-bottom:12px;border:1px solid #E2E8F0">
+  <div style="font-weight:800;font-size:14px;color:#111;margin-bottom:12px">6️⃣ 내보내기 & 저장</div>
+  <div style="display:grid;grid-template-columns:80px 1fr;gap:4px 12px">
+    <span style="color:#111;font-weight:600">Copy HTML</span><span>복사해서 Stibee에 바로 붙여넣기</span>
+    <span style="color:#111;font-weight:600">임시저장</span><span>아직 보내기 전이라면 저장해두고 나중에 이어서 편집</span>
+    <span style="color:#111;font-weight:600">미리보기</span><span>실제 이메일처럼 600px 기준으로 미리 확인</span>
+  </div>
+</div>
+
+<!-- 주의사항 -->
+<div style="background:#FEF2F2;border-radius:14px;padding:18px 20px;margin-bottom:12px;border:1px solid #FECACA">
+  <div style="font-weight:800;font-size:14px;color:#DC2626;margin-bottom:12px">⚠️ 알아두면 좋은 것들</div>
+  <div style="display:grid;grid-template-columns:12px 1fr;gap:6px 10px">
+    <span style="color:#DC2626">·</span><span>원본 대조는 방금 만든 뉴스레터만 가능해요</span>
+    <span style="color:#DC2626">·</span><span>Gemini API 무료 제한이 있어서, 많이 돌리면 결과가 이상해질 수 있어요</span>
+    <span style="color:#DC2626">·</span><span>이미지는 AI가 넣어주지 않아요. 직접 교체하거나 추가해야 해요</span>
+    <span style="color:#DC2626">·</span><span>임시저장·히스토리는 브라우저에 저장돼요. 다른 기기에서는 안 보여요</span>
+    <span style="color:#DC2626">·</span><span>API 키도 브라우저에 남아요. 공용 PC라면 사용 후 삭제해주세요</span>
+    <span style="color:#DC2626">·</span><span>Gmail은 HTML 102KB 넘으면 잘려요. 이미지는 URL로, 공백은 줄여주세요</span>
+  </div>
+</div>
+
+<!-- 단축키 -->
+<div style="background:#F8FAFC;border-radius:14px;padding:12px 20px;border:1px solid #E2E8F0;font-size:11px;color:#64748B;display:flex;gap:16px;flex-wrap:wrap">
+  <span><b>⌘Z</b> 되돌리기</span>
+  <span><b>⌘B</b> 굵게</span>
+  <span><b>⌘I</b> 기울임</span>
+  <span><b>⌘U</b> 밑줄</span>
+</div>
+
+</div>
+<div class="modal-actions" style="margin-top:20px"><button id="guide-close" class="btn-primary btn-sm">닫기</button></div>
+</div></div>
 <div id="toast" class="toast hidden"></div>
-<script src="app.js?v=144"></script>
+<script src="app.js?v=192"></script>
 </body>
 </html>
