@@ -85,18 +85,24 @@ qs('#settings-toggle').addEventListener('click',function(){
 });
 qs('#settings-close').addEventListener('click',function(){qs('#settings-modal').classList.add('hidden');});
 
-/* Guide */
-qs('#guide-toggle').addEventListener('click',function(){qs('#guide-modal').classList.remove('hidden');});
+/* Guide — 모드에 따라 다른 가이드 */
+qs('#guide-toggle').addEventListener('click',function(){
+  var mode=document.body.classList.contains('sns-mode')?'sns':'newsletter';
+  if(mode==='sns')qs('#sns-guide-modal').classList.remove('hidden');
+  else qs('#guide-modal').classList.remove('hidden');
+});
 qs('#guide-close').addEventListener('click',function(){qs('#guide-modal').classList.add('hidden');});
 var gcTop=qs('#guide-close-top');if(gcTop)gcTop.addEventListener('click',function(){qs('#guide-modal').classList.add('hidden');});
+qs('#sns-guide-close').addEventListener('click',function(){qs('#sns-guide-modal').classList.add('hidden');});
+var sgcTop=qs('#sns-guide-close-top');if(sgcTop)sgcTop.addEventListener('click',function(){qs('#sns-guide-modal').classList.add('hidden');});
 
 /* Home */
 function goHome(){
   var hero=qs('#hero-section');if(hero)hero.classList.remove('hidden');
   panels.classList.add('hidden');toolbar.classList.add('hidden');
   qs('#back-btn').classList.add('hidden');
-  var tc=qs('#title-candidates');if(tc)tc.classList.add('hidden');
-  if(isEditable){isEditable=false;NL.contentEditable=false;NL.classList.remove('editable');qs('#edit-toggle').classList.remove('active');qs('#edit-toggle').textContent='✏️ Edit';var ep=qs('#edit-panel');if(ep)ep.classList.remove('open');qs('.main-content').classList.remove('ep-open');}
+  var tcdd=qs('#title-candidates-dropdown');if(tcdd)tcdd.classList.add('hidden');
+  if(isEditable){isEditable=false;NL.contentEditable=false;NL.classList.remove('editable');qs('#edit-toggle').classList.remove('active');qs('#edit-toggle').innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit';var ep=qs('#edit-panel');if(ep)ep.classList.remove('open');qs('.main-content').classList.remove('ep-open');}
   if(isComparing){isComparing=false;qs('#compare-toggle').classList.remove('active');qs('#original-panel').classList.add('hidden');qs('#panel-divider').classList.add('hidden');}
 }
 qs('#home-btn').addEventListener('click',goHome);
@@ -941,7 +947,7 @@ var hasOrigData=false;
 qs('#compare-toggle').addEventListener('click',function(){
   if(!hasOrigData){toast('원본 대조는 새로 생성한 뉴스레터에서만 가능합니다');return;}
   /* 편집 모드 해제 */
-  if(isEditable){isEditable=false;NL.contentEditable=false;NL.classList.remove('editable');qs('#edit-toggle').classList.remove('active');qs('#edit-toggle').textContent='✏️ Edit';qs('#edit-panel').classList.remove('open');}
+  if(isEditable){isEditable=false;NL.contentEditable=false;NL.classList.remove('editable');qs('#edit-toggle').classList.remove('active');qs('#edit-toggle').innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit';qs('#edit-panel').classList.remove('open');}
   isComparing=!isComparing;this.classList.toggle('active',isComparing);
   qs('#original-panel').classList.toggle('hidden',!isComparing);
   qs('#panel-divider').classList.toggle('hidden',!isComparing);
@@ -950,7 +956,7 @@ qs('#compare-toggle').addEventListener('click',function(){
 qs('#edit-toggle').addEventListener('click',function(){
   isEditable=!isEditable;NL.contentEditable=isEditable;
   NL.classList.toggle('editable',isEditable);this.classList.toggle('active',isEditable);
-  this.textContent=isEditable?'✅ 편집 완료':'✏️ Edit';
+  this.innerHTML=isEditable?'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> 편집 완료':'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit';
   var ep=qs('#edit-panel');
   ep.classList.toggle('open',isEditable);
   if(isEditable){clearHL();syncToolbar();}
@@ -959,7 +965,7 @@ qs('#edit-toggle').addEventListener('click',function(){
 qs('#ep-close').addEventListener('click',function(){
   isEditable=false;NL.contentEditable=false;
   NL.classList.remove('editable');qs('#edit-toggle').classList.remove('active');
-  qs('#edit-toggle').textContent='✏️ Edit';
+  qs('#edit-toggle').innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit';
   qs('#edit-panel').classList.remove('open');
 });
 
@@ -1028,6 +1034,25 @@ qs('#copy-html-btn').addEventListener('click',function(){
   if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(html).then(function(){toast('HTML 복사됨!');});
   else{var ta=document.createElement('textarea');ta.value=html;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('HTML 복사됨!');}
 });
+
+/* ===== 스티비로 보내기 (HTML 복사 + 새 탭) ===== */
+qs('#stibee-upload-btn').addEventListener('click',function(){
+  var html=stibeeHTML();
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(html).then(function(){
+      qs('#stibee-modal').classList.remove('hidden');
+    });
+  } else {
+    var ta=document.createElement('textarea');ta.value=html;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
+    qs('#stibee-modal').classList.remove('hidden');
+  }
+});
+qs('#stibee-open').addEventListener('click',function(){
+  window.open('https://stibee.com/app/emails/new','_blank');
+  qs('#stibee-modal').classList.add('hidden');
+  toast('스티비에서 HTML 상자에 붙여넣기 하세요');
+});
+qs('#stibee-close').addEventListener('click',function(){qs('#stibee-modal').classList.add('hidden');});
 
 /* ===== Undo ===== */
 var undoStack=[];
@@ -1863,25 +1888,17 @@ function loadHist(idx){if(!nlHistory[idx])return;NL.innerHTML=nlHistory[idx].htm
   /* NL에서 data-section 읽어서 섹션 순서 칩 복원 */
   rebuildSectionChips();
   /* 제목 후보 복원 */
-  var tc=qs('#title-candidates');
-  if(tc&&nlHistory[idx].titles&&nlHistory[idx].titles.length>0){
-    var titles=nlHistory[idx].titles;
-    tc.classList.remove('hidden');
-    tc.innerHTML='<div style="display:flex;gap:8px;overflow-x:auto;padding:4px 0">'
-      +titles.map(function(t,i){
-        return'<div data-title-idx="'+i+'" style="flex:0 0 auto;min-width:180px;padding:10px 14px;background:var(--white);border:1px solid var(--border);border-radius:12px;cursor:pointer;font-size:11px;line-height:1.4;transition:all .15s">'
-          +'<div style="font-size:9px;font-weight:700;color:#4F46E5;margin-bottom:3px">'+t.label+'</div>'
-          +'<div style="color:#334155;word-break:keep-all">'+cleanBr(t.text)+'</div>'
-          +'</div>';
-      }).join('')+'</div>';
-    tc.onclick=function(e){
-      var card=e.target.closest('[data-title-idx]');
-      if(!card)return;
-      var newTitle=titles[+card.dataset.titleIdx].text;
-      var headerDiv=NL.querySelector('div[style*="font-size:22px"]');
-      if(headerDiv){headerDiv.innerHTML=newTitle;toast('제목 변경됨');}
-    };
-  } else if(tc){tc.classList.add('hidden');}
+  var btn=qs('#title-pick-btn');
+  if(nlHistory[idx].titles&&nlHistory[idx].titles.length>0){
+    _titleCandidates=nlHistory[idx].titles;
+    if(btn)btn.style.display='';
+    renderTitleDropdown(0);
+  } else {
+    _titleCandidates=[];
+    if(btn)btn.style.display='none';
+    var dd=qs('#title-candidates-dropdown');
+    if(dd){dd.classList.add('hidden');dd.innerHTML='';}
+  }
   toast('히스토리에서 불러옴');}
 qs('#history-list').addEventListener('click',function(e){
   /* 삭제 버튼 */
@@ -1956,35 +1973,63 @@ genBtn.addEventListener('click',function(){
   }).catch(function(err){showErr('오류: '+err.message);console.error(err);}).then(function(){loading.classList.add('hidden');genBtn.disabled=false;});
 });
 
-/* ===== Title Candidates ===== */
+/* ===== Title Candidates — 드롭다운 방식 ===== */
+var _titleCandidates=[];
+
 function populateTitleCandidates(sections){
-  var topWrap=qs('#title-candidates');
   var epSec=qs('#ep-titles-section');if(epSec)epSec.style.display='none';
-  if(!topWrap)return;
   var ai=sections[0]&&sections[0].ai;
-  if(!ai||!ai.title){topWrap.classList.add('hidden');return;}
-  var titles=[
-    {label:'&#127919; 기본',text:ai.title},
-    {label:'&#128202; 데이터',text:ai.titleB||''},
-    {label:'&#128293; 클릭유도',text:ai.titleC||''}
+  var btn=qs('#title-pick-btn');
+  if(!ai||!ai.title){if(btn)btn.style.display='none';return;}
+  _titleCandidates=[
+    {label:'기본',text:ai.title},
+    {label:'데이터 중심',text:ai.titleB||''},
+    {label:'클릭 유도',text:ai.titleC||''}
   ].filter(function(t){return t.text;});
-  topWrap.classList.remove('hidden');
-  topWrap.innerHTML='<div style="display:flex;gap:8px;overflow-x:auto;padding:4px 0">'
-    +titles.map(function(t,i){
-      return'<div data-title-idx="'+i+'" style="flex:0 0 auto;min-width:180px;padding:10px 14px;background:var(--white);border:1px solid var(--border);border-radius:12px;cursor:pointer;font-size:11px;line-height:1.4;transition:all .15s">'
-        +'<div style="font-size:9px;font-weight:700;color:#4F46E5;margin-bottom:3px">'+t.label+'</div>'
-        +'<div style="color:#334155;word-break:keep-all">'+cleanBr(t.text)+'</div>'
-        +'</div>';
-    }).join('')+'</div>';
-  topWrap.onclick=function(e){
-    var card=e.target.closest('[data-title-idx]');
-    if(!card)return;
-    var idx=+card.dataset.titleIdx;
-    var newTitle=titles[idx].text;
+  if(btn)btn.style.display='';
+  renderTitleDropdown(0); /* 첫 번째를 현재 적용 상태로 */
+}
+
+function renderTitleDropdown(activeIdx){
+  var dd=qs('#title-candidates-dropdown');
+  if(!dd)return;
+  dd.innerHTML=_titleCandidates.map(function(t,i){
+    return'<div class="title-cand-item'+(i===activeIdx?' active':'')+'" data-tidx="'+i+'">'
+      +'<div class="title-cand-tag">'+t.label+'</div>'
+      +'<div class="title-cand-text">'+cleanBr(t.text)+'</div>'
+      +'</div>';
+  }).join('');
+  dd.onclick=function(e){
+    var item=e.target.closest('.title-cand-item');
+    if(!item)return;
+    var idx=+item.dataset.tidx;
+    var newTitle=_titleCandidates[idx].text;
     var headerDiv=NL.querySelector('div[style*="font-size:22px"]');
-    if(headerDiv){headerDiv.innerHTML=newTitle;toast('제목 변경됨');}
+    if(headerDiv){headerDiv.innerHTML=newTitle;toast('제목 변경됨 ✓');}
+    renderTitleDropdown(idx);
+    dd.classList.add('hidden');
+    qs('#title-pick-btn').classList.remove('active');
   };
 }
+
+/* 제목 후보 버튼 토글 */
+(function(){
+  var btn=qs('#title-pick-btn');
+  var dd=qs('#title-candidates-dropdown');
+  if(!btn||!dd)return;
+  btn.addEventListener('click',function(e){
+    e.stopPropagation();
+    var isHidden=dd.classList.contains('hidden');
+    dd.classList.toggle('hidden');
+    btn.classList.toggle('active',isHidden);
+  });
+  document.addEventListener('click',function(e){
+    if(!dd.contains(e.target)&&e.target!==btn){
+      dd.classList.add('hidden');
+      btn.classList.remove('active');
+    }
+  });
+})();
 
 /* ===== URL Chips (drag to insert) ===== */
 /* 히스토리/임시저장에서 불러올 때 NL의 data-section으로 섹션 칩 복원 */
@@ -2306,4 +2351,1129 @@ function populateUrlChips(sections){
 /* Init */
 renderHist();
 renderDrafts();
+
+/* =============================================
+   SNS 텍스트 생성 모듈
+   ============================================= */
+(function(){
+
+/* 인스타그램 프로필 링크 매핑 */
+var INSTA_LINKS={
+  '모바일인덱스INSIGHT': '📈 모바일인덱스 리포트 tinyurl.com/yecj7zff',
+  '트레이딩웍스360':    '🎯 트레이딩웍스360 블로그 tinyurl.com/2zhffz5v',
+  '디파이너리':         '📮 디파이너리 블로그 tinyurl.com/49wk3exm',
+  'TVIndex':            '📺 TV AD INDEX 블로그 tinyurl.com/4s8cyhv4',
+  '아이지에이웍스':     '📈 모바일인덱스 리포트 tinyurl.com/yecj7zff',
+  'Fixfolio':           '📈 모바일인덱스 리포트 tinyurl.com/yecj7zff',
+  'Fixtype':            '📈 모바일인덱스 리포트 tinyurl.com/yecj7zff'
+};
+
+function getInstaLink(tag){
+  return INSTA_LINKS[tag]||'📈 모바일인덱스 리포트 tinyurl.com/yecj7zff';
+}
+
+/* SNS 저장 목록 */
+var snsSaved=[];
+try{snsSaved=JSON.parse(localStorage.getItem('sns-saved')||'[]');}catch(e){snsSaved=[];}
+function saveSnsStorage(){localStorage.setItem('sns-saved',JSON.stringify(snsSaved));}
+
+/* 현재 활성 플랫폼 */
+var snsActivePlatform='facebook';
+/* 현재 생성된 후보들 { facebook:[], linkedin:[], instagram:[] } */
+var snsCandidates={facebook:[],linkedin:[],instagram:[]};
+
+/* ---- 모드 스위칭 ---- */
+var currentMode='newsletter';
+qsa('.mode-btn').forEach(function(btn){
+  btn.addEventListener('click',function(){
+    currentMode=btn.dataset.mode;
+    qsa('.mode-btn').forEach(function(b){b.classList.remove('active');});
+    btn.classList.add('active');
+    if(currentMode==='newsletter'){
+      showNewsletterMode();
+    } else {
+      showSnsMode();
+    }
+  });
+});
+
+function showNewsletterMode(){
+  document.body.classList.remove('sns-mode');
+  qs('#sidebar-newsletter').style.display='';
+  qs('#sidebar-sns').style.display='none';
+  var hero=qs('#hero-section');if(hero)hero.classList.remove('hidden');
+  qs('#panels').classList.add('hidden');
+  qs('#editor-toolbar').classList.add('hidden');
+  qs('#back-btn').classList.add('hidden');
+  var tcdd=qs('#title-candidates-dropdown');if(tcdd)tcdd.classList.add('hidden');
+  qs('#sns-section').classList.add('hidden');
+  qs('#sns-results').classList.add('hidden');
+}
+
+function showSnsMode(){
+  document.body.classList.add('sns-mode');
+  qs('#sidebar-newsletter').style.display='none';
+  qs('#sidebar-sns').style.display='';
+  renderSidebarSnsSaved();
+  renderSidebarSnsHistory();
+  var hero=qs('#hero-section');
+  if(hero)hero.classList.add('hidden');
+  qs('#panels').classList.add('hidden');
+  qs('#editor-toolbar').classList.add('hidden');
+  qs('#back-btn').classList.add('hidden');
+  var tcdd=qs('#title-candidates-dropdown');if(tcdd)tcdd.classList.add('hidden');
+  var snsSection=qs('#sns-section');
+  if(snsSection)snsSection.classList.remove('hidden');
+  qs('#sns-results').classList.add('hidden');
+}
+
+/* ---- URL 행 추가/제거 (SNS) ---- */
+function makeSnsUrlRow(){
+  var row=document.createElement('div');
+  row.className='url-row';
+  row.innerHTML='<span class="url-drag-handle"></span><div class="url-row-inner"><div class="url-row-top"><div class="url-row-main"><span class="url-icon">📎</span><input type="url" class="url-field sns-url-field" placeholder="SNS에 공유할 콘텐츠 URL을 입력하세요"></div><button class="url-remove-btn">✕</button></div></div>';
+  row.querySelector('.url-remove-btn').addEventListener('click',function(){
+    if(qs('#sns-url-list').querySelectorAll('.url-row').length>1)row.remove();
+  });
+  return row;
+}
+
+qs('#sns-url-list').querySelector('.url-remove-btn').addEventListener('click',function(){
+  if(qs('#sns-url-list').querySelectorAll('.url-row').length>1)
+    this.closest('.url-row').remove();
+});
+
+/* ---- 플랫폼 탭 전환 ---- */
+qsa('.sns-ptab').forEach(function(tab){
+  tab.addEventListener('click',function(){
+    snsActivePlatform=tab.dataset.platform;
+    qsa('.sns-ptab').forEach(function(t){t.classList.remove('active');});
+    tab.classList.add('active');
+    renderSnsCandidates();
+  });
+});
+
+/* ---- 뒤로가기 ---- */
+qs('#sns-back-btn').addEventListener('click',function(){
+  qs('#sns-results').classList.add('hidden');
+  qs('#sns-section').classList.remove('hidden');
+});
+
+/* ---- 저장 패널 토글 ---- */
+qs('#sns-saved-toggle').addEventListener('click',function(){
+  qs('#sns-history-panel').classList.add('hidden');
+  var panel=qs('#sns-saved-panel');
+  var isHidden=panel.classList.contains('hidden');
+  panel.classList.toggle('hidden');
+  if(isHidden){
+    renderSnsSavedList();
+    /* 패널이 열릴 때 저장 목록 내용 새로고침 */
+    var list=qs('#sns-saved-list');
+    if(list&&snsSaved.length===0){
+      list.innerHTML='<p style="color:var(--light);font-size:12px;text-align:center;padding:32px 12px">아직 저장된 텍스트가 없어요</p>';
+    }
+  }
+});
+qs('#sns-saved-panel-close').addEventListener('click',function(){
+  qs('#sns-saved-panel').classList.add('hidden');
+});
+
+/* ---- Gemini 호출 ---- */
+function snsGenerate(urls){
+  var key=getKey();
+  if(!key)return Promise.reject(new Error('NO_KEY'));
+
+  /* URL당 프롬프트 구성 */
+  var urlLines=urls.map(function(u,i){
+    return (i+1)+'. URL: '+u.url+'\n   솔루션: '+u.tag+'\n   인스타그램 프로필 링크: '+getInstaLink(u.tag);
+  }).join('\n\n');
+
+  var sysPrompt=[
+    '당신은 B2B 마케팅 콘텐츠 전문가입니다. 주어진 URL들의 콘텐츠를 분석하여 각 SNS 플랫폼에 최적화된 공유 텍스트를 작성합니다.',
+    '',
+    '## 플랫폼별 가이드라인',
+    '',
+    '## 공통 규칙',
+    '- **마크다운 문법 절대 사용 금지**: **, *, #, [] 등 사용하지 말 것',
+    '- URL 링크 본문에 직접 삽입 금지 (모든 플랫폼)',
+    '- 실제 URL 콘텐츠를 읽어서 구체적인 수치/사례 기반으로 작성',
+    '',
+    '### 페이스북',
+    '다음 구조로 작성:',
+    '1. 흥미를 유발하는 훅 문장 (데이터나 반전 포인트로 시작)',
+    '2. 핵심 발견/인사이트를 2~3문장으로 자연스럽게 전개',
+    '3. 소제목 + 불릿(-) 3~4개 (각 불릿은 핵심 수치나 인사이트)',
+    '   - 소제목은 "■ 핵심 요약" 같은 고정 문구 금지! 콘텐츠 내용에 맞는 포멀한 한 줄로 작성. 예: "■ 2025년 증권 앱 시장 변화", "■ MZ세대 투자 트렌드 3가지"',
+    '4. CTA 1문장으로 마무리 (URL 없이)',
+    '- 이모지는 글 전체에서 최대 2개만. 그 이상 절대 금지. 불릿에 이모지 넣지 마.',
+    '- 3개 후보 중 1개는 반드시 이모지 없이 정적이고 전문적인 톤으로 작성.',
+    '- ★ 750자 이내 필수! 절대 초과 금지. 간결하게 작성.',
+    '',
+    '### 링크드인',
+    '다음 구조로 작성:',
+    '1. 비즈니스적으로 날카로운 첫 문장 (질문형 또는 데이터 제시)',
+    '2. 시장 상황이나 문제의식 2~3문장',
+    '3. 핵심 인사이트 3개 불릿(-) 정리',
+    '4. 마지막은 간결하게 마무리. "아티클 전문을 통해 확인해 보세요" 정도로 끝내. "청사진", "새로운 지평", "패러다임" 같은 거창한 단어 절대 금지. 장황한 마무리 금지. 딱 한 문장으로.',
+    '- 350~500자 내외, B2B 전문가 톤, 이모지 최소화 (0~1개)',
+    '',
+    '### 인스타그램',
+    '다음 구조로 작성:',
+    '1. 첫 줄: [콘텐츠 제목] — 대괄호 꺽쇠 안에 원문 제목을 간결하게. 예: [BTS 광화문 공연, 135만 팬덤 데이터 분석]',
+    '2. 본문: 5~6줄로 핵심 내용 작성. 짧고 임팩트 있는 문장 위주.',
+    '3. 마지막 문장은 반드시: "지금 바로 프로필 상단 링크를 통해 확인해 보세요!" 로 끝낼 것.',
+    '- 이모지는 글 전체에서 딱 2개만 사용. 그 이상 절대 금지.',
+    '- 200~350자 내외',
+    '',
+    '## 출력 형식',
+    'JSON만 출력. 설명 없이 JSON만. 각 후보에 label(특징 2~4자)과 text를 포함. 플랫폼당 3개씩.',
+    'label 예시: "수치 강조", "스토리텔링", "질문형", "문제의식", "반전 포인트", "실용 전략", "데이터 중심", "감성 접근"',
+    '원문 내용에 맞게 가장 적합한 3가지 각도를 AI가 자동 선택.',
+    '```json',
+    '{',
+    '  "facebook": [{"label":"...","text":"..."},{"label":"...","text":"..."},{"label":"...","text":"..."}],',
+    '  "linkedin": [{"label":"...","text":"..."},{"label":"...","text":"..."},{"label":"...","text":"..."}],',
+    '  "instagram": [{"label":"...","text":"..."},{"label":"...","text":"..."},{"label":"...","text":"..."}]',
+    '}',
+    '```',
+    '',
+    '3개 후보가 서로 확실히 다른 각도/어조여야 해. URL 콘텐츠를 직접 읽어서 실제 내용 기반으로 작성. ★ 반드시 플랫폼당 정확히 3개만! 4개 이상 절대 금지.'
+  ].join('\n');
+
+  var userMsg='다음 URL들의 콘텐츠를 분석하여 SNS 공유 텍스트를 생성해주세요:\n\n'+urlLines;
+
+  var body=JSON.stringify({
+    system_instruction:{parts:[{text:sysPrompt}]},
+    contents:[{parts:[{text:userMsg}]}],
+    generationConfig:{temperature:0.8,maxOutputTokens:32768},
+    tools:[{"urlContext":{}}]
+  });
+
+  return fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key='+key,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:body
+  }).then(function(r){return r.json();}).then(function(d){
+    console.log('SNS API response:', d);
+    var c=d.candidates&&d.candidates[0];
+    if(!c||!c.content||!c.content.parts){
+      console.error('Invalid response structure:', d);
+      throw new Error('AI 응답 오류: '+(d.error&&d.error.message||'응답 구조 오류'));
+    }
+    var txt='';
+    for(var i=0;i<c.content.parts.length;i++){if(c.content.parts[i].text)txt+=c.content.parts[i].text;}
+    /* JSON 파싱 — 코드블록 우선 시도, 실패 시 raw 추출 */
+    var jsonStr=null;
+    var codeBlock=txt.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+    if(codeBlock){jsonStr=codeBlock[1].trim();}
+    if(!jsonStr){
+      /* 첫 { 부터 마지막 } 까지 추출 */
+      var start=txt.indexOf('{');
+      var end=txt.lastIndexOf('}');
+      if(start!==-1&&end!==-1&&end>start){jsonStr=txt.substring(start,end+1);}
+    }
+    if(!jsonStr)throw new Error('AI가 올바른 형식으로 응답하지 않았습니다. 다시 시도해 보세요.');
+    var result;
+    try{result=JSON.parse(jsonStr);}catch(e){throw new Error('JSON 파싱 실패: '+e.message+'\n(다시 생성해 보세요)');}
+    if(!result.facebook||!result.linkedin||!result.instagram)throw new Error('플랫폼 데이터 누락 — 다시 생성해 보세요.');
+    /* 강제로 3개로 자르기 */
+    result.facebook=result.facebook.slice(0,3);
+    result.linkedin=result.linkedin.slice(0,3);
+    result.instagram=result.instagram.slice(0,3);
+    return result;
+  });
+}
+
+/* ---- 생성 버튼 ---- */
+qs('#sns-generate-btn').addEventListener('click',function(){
+  var key=getKey();
+  if(!key){toast('⚙️ 설정에서 Gemini API 키를 먼저 입력하세요');qs('#settings-modal').classList.remove('hidden');return;}
+
+  var rows=qsa('#sns-url-list .url-row');
+  var urls=[];
+  rows.forEach(function(row){
+    var urlVal=(row.querySelector('.sns-url-field').value||'').trim();
+    var tagEl=row.querySelector('.sns-tag-select');
+    var tagVal=tagEl?tagEl.value:'auto';
+    if(urlVal){
+      var detectedTag=(tagVal==='auto')?classify(urlVal):tagVal;
+      urls.push({url:urlVal,tag:detectedTag});
+    }
+  });
+  if(urls.length===0){toast('URL을 입력하세요');return;}
+
+  qs('#sns-loading').classList.remove('hidden');
+  qs('#sns-error-msg').classList.add('hidden');
+  qs('#sns-generate-btn').disabled=true;
+
+  snsGenerate(urls).then(function(result){
+    snsCandidates=result;
+    snsLastUrls=urls;
+    snsActivePlatform='facebook';
+    qsa('.sns-ptab').forEach(function(t){t.classList.remove('active');});
+    qs('[data-platform="facebook"]').classList.add('active');
+    qs('#sns-loading').classList.add('hidden');
+    qs('#sns-generate-btn').disabled=false;
+    qs('#sns-section').classList.add('hidden');
+    qs('#sns-results').classList.remove('hidden');
+    renderSnsCandidates();
+    addSnsHistory(result,urls);
+  }).catch(function(err){
+    qs('#sns-loading').classList.add('hidden');
+    qs('#sns-generate-btn').disabled=false;
+    var errEl=qs('#sns-error-msg');
+    errEl.textContent='❌ '+err.message;
+    errEl.classList.remove('hidden');
+  });
+});
+
+/* ---- 후보 카드 렌더링 ---- */
+function cleanSnsText(t){
+  /* ** 마크다운 제거 */
+  t=t.replace(/\*\*(.+?)\*\*/g,'$1').replace(/\*(.+?)\*/g,'$1');
+  /* 리포트 링크 줄 제거 */
+  t=t.replace(/^.*리포트.*(?:링크|확인|바로가기).*$/gm,'').replace(/\n{3,}/g,'\n\n').trim();
+  /* 인스타 프로필 링크 줄 제거 (tinyurl 등) */
+  t=t.replace(/^.*(?:tinyurl\.com|프로필\s*링크|상단\s*프로필).*$/gm,'').replace(/\n{3,}/g,'\n\n').trim();
+  return t;
+}
+
+function renderSnsCandidates(){
+  var wrap=qs('#sns-candidates-wrap');
+  wrap.innerHTML='';
+  var rawList=(snsCandidates[snsActivePlatform]||[]).slice(0,3);
+  var labelColors=['sns-label-0','sns-label-1','sns-label-2','sns-label-3','sns-label-4'];
+
+  rawList.forEach(function(item,idx){
+    var isObj=(typeof item==='object'&&item.text);
+    var text=isObj?item.text:item;
+    var label=isObj&&item.label?item.label:'후보 '+(idx+1);
+    text=cleanSnsText(text);
+
+    var card=document.createElement('div');
+    card.className='sns-card';
+
+    var header=document.createElement('div');
+    header.className='sns-card-header';
+    header.innerHTML='<span class="sns-card-label '+labelColors[idx%5]+'">'+esc(label)+'</span>'
+      +'<div style="display:flex;gap:4px;align-items:center">'
+      +'<button class="sns-icon-btn sns-copy-btn" title="복사"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>'
+      +'<button class="sns-icon-btn sns-preview-btn" title="미리보기"><svg width="12" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></button>'
+      +'<button class="sns-icon-btn sns-card-save-btn" title="저장"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg></button>'
+      +'<button class="sns-text-btn sns-edit-btn">수정</button>'
+      +'</div>';
+
+    var body=document.createElement('div');
+    body.className='sns-card-body';
+    var textEl=document.createElement('div');
+    textEl.className='sns-card-text';
+    textEl.textContent=text;
+    body.appendChild(textEl);
+
+    card.appendChild(header);card.appendChild(body);
+
+    /* 복사 */
+    header.querySelector('.sns-copy-btn').addEventListener('click',function(e){
+      e.stopPropagation();
+      var t=textEl.innerText||textEl.textContent;
+      if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(function(){toast('복사됨!');});
+      else{var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('복사됨!');}
+    });
+
+    /* 미리보기 */
+    header.querySelector('.sns-preview-btn').addEventListener('click',function(e){
+      e.stopPropagation();
+      showSnsPreview(snsActivePlatform,textEl.innerText||textEl.textContent);
+    });
+
+    /* 카드 직접 저장 */
+    header.querySelector('.sns-card-save-btn').addEventListener('click',function(e){
+      e.stopPropagation();
+      var t=textEl.innerText||textEl.textContent;
+      snsSaved.unshift({id:Date.now(),platform:snsActivePlatform,text:t,label:label,date:today()});
+      if(snsSaved.length>50)snsSaved=snsSaved.slice(0,50);
+      saveSnsStorage();renderSnsSavedList();renderSidebarSnsSaved();toast('저장됨! 🔖');
+    });
+
+    /* 수정 → 모달 열기 */
+    header.querySelector('.sns-edit-btn').addEventListener('click',function(e){
+      e.stopPropagation();
+      openCardModal(idx);
+    });
+
+    function openCardModal(ci){
+      var item=snsCandidates[snsActivePlatform][ci];
+      if(!item)return;
+      var isObj=(typeof item==='object'&&item.text);
+      var mText=isObj?item.text:(typeof item==='string'?item:'');
+      var mLabel=isObj&&item.label?item.label:'후보 '+(ci+1);
+      mText=cleanSnsText(mText);
+      var bodyEl=qs('#sns-preview-body');
+      bodyEl.style.background='#F8FAFC';
+      bodyEl.innerHTML='<div style="margin-bottom:14px;display:flex;align-items:center;justify-content:space-between">'
+        +'<span class="sns-card-label '+labelColors[ci%5]+'" style="font-size:12px;padding:5px 14px">'+esc(mLabel)+'</span>'
+        +'</div>'
+        +'<div id="card-modal-text" contenteditable="true" style="background:#fff;border:1.5px solid #E2E8F0;border-radius:12px;padding:18px;font-size:14px;line-height:1.8;color:#1E293B;white-space:pre-wrap;outline:none;min-height:120px">'+esc(mText)+'</div>'
+        +'<div style="display:flex;gap:8px;align-items:center;margin-top:14px;flex-wrap:wrap">'
+        +'<select id="card-modal-tone" class="sns-tone-select" style="font-size:12px;padding:6px 12px"><option value="">톤</option><option value="casual">캐주얼</option><option value="professional">전문적</option><option value="hooking">후킹</option></select>'
+        +'<select id="card-modal-style" class="sns-style-select" style="font-size:12px;padding:6px 12px"><option value="">스타일</option><option value="data">수치 강조</option><option value="story">스토리텔링</option><option value="question">질문형</option><option value="problem">문제의식</option><option value="reversal">반전 포인트</option></select>'
+        +'<button id="card-modal-regen" class="btn-primary btn-sm">재생성</button>'
+        +'<button id="card-modal-source" class="sns-modal-icon-btn" title="원본 대조"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/></svg></button>'
+        +'<div style="flex:1"></div>'
+        +'<button id="card-modal-save" class="sns-modal-icon-btn" title="저장"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg></button>'
+        +'<button id="card-modal-copy" class="sns-modal-icon-btn" title="복사"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>'
+        +'</div>';
+      qs('#sns-preview-modal').querySelector('h3').textContent='후보 '+(ci+1)+' 편집';
+      qs('#sns-preview-modal').classList.remove('hidden');
+
+      var modalText=qs('#card-modal-text');
+      modalText.addEventListener('input',function(){});
+
+      /* 복사 */
+      qs('#card-modal-copy').addEventListener('click',function(){
+        var t=modalText.innerText||modalText.textContent;
+        if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(function(){toast('복사됨!');});
+      });
+
+      /* 저장 */
+      qs('#card-modal-save').addEventListener('click',function(){
+        var t=modalText.innerText||modalText.textContent;
+        snsSaved.unshift({id:Date.now(),platform:snsActivePlatform,text:t,label:mLabel,date:today()});
+        if(snsSaved.length>50)snsSaved=snsSaved.slice(0,50);
+        saveSnsStorage();renderSnsSavedList();renderSidebarSnsSaved();
+        this.classList.add('saved');
+        this.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>';
+        toast('저장됨!');
+      });
+
+      /* 원본 대조 */
+      qs('#card-modal-source').addEventListener('click',function(){
+        var t=modalText.innerText||modalText.textContent;
+        var key=getKey();if(!key){toast('API 키를 설정해주세요');return;}
+        var btn=qs('#card-modal-source');btn.disabled=true;btn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spin"><circle cx="12" cy="12" r="10"/></svg>';
+        var sysP='아래 SNS 포스트 텍스트를 분석해서, 이 텍스트가 참고한 원문의 핵심 문장들을 추출해줘.\n\n'
+          +'출력 형식:\n'
+          +'- 원문에서 직접 따온 핵심 문장만 불릿(-)으로 나열\n'
+          +'- 3~6개\n'
+          +'- SNS 텍스트에서 인용하거나 참고한 원문의 실제 내용(수치, 사실, 데이터)만 추출\n'
+          +'- SNS 텍스트 자체를 반복하지 마. 원문 근거만.\n'
+          +'- 마크다운 금지, 간결하게';
+        var reqBody=JSON.stringify({system_instruction:{parts:[{text:sysP}]},contents:[{parts:[{text:'SNS 텍스트:\n'+t}]}],generationConfig:{temperature:0.3,maxOutputTokens:2048}});
+        fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key='+key,{
+          method:'POST',headers:{'Content-Type':'application/json'},body:reqBody
+        }).then(function(r){return r.json();}).then(function(d){
+          var c=d.candidates&&d.candidates[0];
+          if(!c||!c.content||!c.content.parts)throw new Error('응답 오류');
+          var txt='';for(var i=0;i<c.content.parts.length;i++){if(c.content.parts[i].text)txt+=c.content.parts[i].text;}
+          txt=txt.replace(/\*\*(.+?)\*\*/g,'$1');
+          bodyEl.innerHTML='<div style="display:flex;gap:16px;align-items:stretch">'
+            +'<div style="flex:1;background:#fff;border:1.5px solid #E2E8F0;border-radius:12px;overflow:hidden;display:flex;flex-direction:column">'
+            +'<div style="padding:10px 14px;border-bottom:1px solid #E2E8F0;background:#FAFBFF;font-size:11px;font-weight:700;color:#4F46E5">SNS 텍스트</div>'
+            +'<div style="padding:14px;font-size:12px;line-height:1.8;color:#1E293B;white-space:pre-wrap;flex:1">'+esc(t)+'</div>'
+            +'</div>'
+            +'<div style="flex:1;background:#fff;border:1.5px solid #E2E8F0;border-radius:12px;overflow:hidden;display:flex;flex-direction:column">'
+            +'<div style="padding:10px 14px;border-bottom:1px solid #E2E8F0;background:#FFF7ED;font-size:11px;font-weight:700;color:#EA580C">원문에서 따온 핵심 문장</div>'
+            +'<div style="padding:14px;font-size:12px;line-height:1.8;color:#334155;white-space:pre-wrap;flex:1">'+esc(txt)+'</div>'
+            +'</div></div>';
+          qs('#sns-preview-modal').querySelector('h3').textContent='원본 대조';
+          btn.disabled=false;btn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/></svg>';
+        }).catch(function(err){btn.disabled=false;btn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/></svg>';toast('실패: '+(err&&err.message||'오류'));});
+      });
+
+      /* 재생성 */
+      qs('#card-modal-regen').addEventListener('click',function(){
+        var tone=qs('#card-modal-tone').value;
+        var style=qs('#card-modal-style').value;
+        if(!tone&&!style){toast('톤 또는 스타일을 선택하세요');return;}
+        var combined=tone&&style?tone+'+'+style:(tone||style);
+        var btn=qs('#card-modal-regen');btn.disabled=true;btn.textContent='⏳';
+        regenSingleCandidate(snsActivePlatform,ci,combined).then(function(result){
+          var newText=cleanSnsText(result.text||'');
+          modalText.textContent=newText;
+          snsCandidates[snsActivePlatform][ci]={label:result.label||mLabel,text:newText};
+          renderSnsCandidates();
+          btn.disabled=false;btn.textContent='재생성';toast('재생성 완료!');
+        }).catch(function(err){btn.disabled=false;btn.textContent='재생성';toast('실패: '+(err&&err.message||'오류'));});
+      });
+
+      /* 모달 닫힐 때 수정 내용 반영 */
+      var closeBtn=qs('#sns-preview-close');
+      var origClose=closeBtn.onclick;
+      closeBtn.onclick=function(){
+        var t=modalText.innerText||modalText.textContent;
+        if(t!==mText){
+          snsCandidates[snsActivePlatform][ci]={label:mLabel,text:t};
+          renderSnsCandidates();
+        }
+        qs('#sns-preview-modal').classList.add('hidden');
+        closeBtn.onclick=origClose;
+      };
+    }
+
+    textEl.addEventListener('input',function(){
+      var len=textEl.textContent.length;
+      header.querySelector('.sns-card-num').textContent='#'+(idx+1)+' / '+rawList.length+' · '+len+'자';
+    });
+
+    wrap.appendChild(card);
+  });
+}
+
+/* ---- SNS 저장 목록 렌더링 ---- */
+var platformColors={facebook:'#1877F2',linkedin:'#0A66C2',instagram:'#C13584'};
+var platformNames={facebook:'페이스북',linkedin:'링크드인',instagram:'인스타그램'};
+var platformIcons={facebook:'<i class="fa-brands fa-facebook"></i>',linkedin:'<i class="fa-brands fa-linkedin-in"></i>',instagram:'<i class="fa-brands fa-instagram"></i>'};
+
+function renderSnsSavedList(){
+  var list=qs('#sns-saved-list');
+  /* 저장 카운트 업데이트 */
+  var countEl=qs('#sns-saved-count');
+  if(countEl)countEl.textContent=snsSaved.length>0?'('+snsSaved.length+')':'';
+  if(!list)return;
+  if(snsSaved.length===0){
+    list.innerHTML='<p style="color:var(--light);font-size:12px;text-align:center;padding:32px 12px">아직 저장된 텍스트가 없어요</p>';return;
+  }
+  list.innerHTML='';
+  snsSaved.forEach(function(item){
+    var el=document.createElement('div');
+    el.className='sns-saved-item';
+    var previewText=item.text.length>60?item.text.substring(0,60)+'...':item.text;
+    el.innerHTML='<div class="sns-saved-item-top">'+
+      '<span class="sns-saved-item-platform">'+platformIcons[item.platform]+' '+platformNames[item.platform]+'</span>'+
+      '<button class="sns-saved-item-del">✕</button>'+
+      '</div>'+
+      '<div class="sns-saved-item-text" style="cursor:pointer">'+esc(previewText)+'</div>'+
+      '<div class="sns-saved-item-date">'+item.date+' · <span class="sns-saved-view-link">내용 보기 →</span></div>';
+    /* 클릭 → 수정 모달 열기 (일반 수정과 동일한 UI) */
+    function openSavedEdit(e){
+      e.stopPropagation();
+      var labelColors=['sns-label-0','sns-label-1','sns-label-2','sns-label-3','sns-label-4'];
+      var bodyEl=qs('#sns-preview-body');
+      bodyEl.style.background='#F8FAFC';
+      bodyEl.innerHTML='<div style="margin-bottom:14px;display:flex;align-items:center;justify-content:space-between">'
+        +'<span class="sns-card-label '+labelColors[0]+'" style="font-size:12px;padding:5px 14px">'+platformIcons[item.platform]+' '+platformNames[item.platform]+'</span>'
+        +'</div>'
+        +'<div id="saved-edit-text" contenteditable="true" style="background:#fff;border:1.5px solid #E2E8F0;border-radius:12px;padding:18px;font-size:14px;line-height:1.8;color:#1E293B;white-space:pre-wrap;outline:none;min-height:120px">'+esc(item.text)+'</div>'
+        +'<div style="display:flex;gap:8px;align-items:center;margin-top:14px;flex-wrap:wrap">'
+        +'<select id="saved-modal-tone" class="sns-tone-select" style="font-size:12px;padding:6px 12px"><option value="">톤</option><option value="casual">캐주얼</option><option value="professional">전문적</option><option value="hooking">후킹</option></select>'
+        +'<select id="saved-modal-style" class="sns-style-select" style="font-size:12px;padding:6px 12px"><option value="">스타일</option><option value="data">수치 강조</option><option value="story">스토리텔링</option><option value="question">질문형</option><option value="problem">문제의식</option><option value="reversal">반전 포인트</option></select>'
+        +'<button id="saved-modal-regen" class="btn-primary btn-sm">재생성</button>'
+        +'<button id="saved-modal-source" class="sns-modal-icon-btn" title="원본 대조"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/></svg></button>'
+        +'<div style="flex:1"></div>'
+        +'<button id="saved-modal-save" class="sns-modal-icon-btn saved" title="저장됨"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg></button>'
+        +'<button id="saved-modal-copy" class="sns-modal-icon-btn" title="복사"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>'
+        +'</div>';
+      qs('#sns-preview-modal').querySelector('h3').textContent='저장된 텍스트 편집';
+      qs('#sns-preview-modal').classList.remove('hidden');
+
+      var modalText=qs('#saved-edit-text');
+
+      /* 복사 */
+      qs('#saved-modal-copy').addEventListener('click',function(){
+        var t=modalText.innerText||modalText.textContent;
+        navigator.clipboard.writeText(t).then(function(){toast('복사됨!');});
+      });
+
+      /* 저장 (수정 내용 저장) */
+      qs('#saved-modal-save').addEventListener('click',function(){
+        var t=modalText.innerText||modalText.textContent;
+        item.text=t;
+        saveSnsStorage();
+        renderSnsSavedList();
+        renderSidebarSnsSaved();
+        toast('수정 내용 저장됨 ✓');
+      });
+
+      /* 재생성 */
+      qs('#saved-modal-regen').addEventListener('click',function(){
+        var t=modalText.innerText||modalText.textContent;
+        var tone=qs('#saved-modal-tone').value;
+        var style=qs('#saved-modal-style').value;
+        var key=getKey();if(!key){toast('API 키를 설정해주세요');return;}
+        var btn=qs('#saved-modal-regen');btn.disabled=true;btn.textContent='⏳';
+        var toneMap={casual:'캐주얼하고 친근한',professional:'전문적이고 신뢰감 있는',hooking:'강렬하고 후킹되는'};
+        var styleMap={data:'수치/데이터 강조',story:'스토리텔링',question:'질문형',problem:'문제의식 제기',reversal:'반전 포인트'};
+        var sysP='아래 SNS 텍스트를 다시 작성해줘.\n\n';
+        if(tone)sysP+='톤: '+toneMap[tone]+'\n';
+        if(style)sysP+='스타일: '+styleMap[style]+'\n';
+        sysP+='\n기존 텍스트:\n'+t+'\n\n새로운 텍스트만 출력해줘.';
+        callGemini(key,[{role:'user',parts:[{text:sysP}]}]).then(function(res){
+          var txt=(res&&res.candidates&&res.candidates[0]&&res.candidates[0].content&&res.candidates[0].content.parts&&res.candidates[0].content.parts[0]&&res.candidates[0].content.parts[0].text)||'';
+          modalText.textContent=txt.trim();
+          btn.disabled=false;btn.textContent='재생성';
+        }).catch(function(err){btn.disabled=false;btn.textContent='재생성';toast('실패');});
+      });
+
+      /* 원본 대조 */
+      qs('#saved-modal-source').addEventListener('click',function(){
+        var t=modalText.innerText||modalText.textContent;
+        var key=getKey();if(!key){toast('API 키를 설정해주세요');return;}
+        var btn=qs('#saved-modal-source');btn.disabled=true;btn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spin"><circle cx="12" cy="12" r="10"/></svg>';
+        var sysP='아래 SNS 포스트 텍스트를 분석해서, 이 텍스트가 참고한 원문의 핵심 문장들을 추출해줘.\n\n'
+          +'출력 형식:\n'
+          +'- 원문에서 직접 따온 핵심 문장만 불릿(-)으로 나열\n'
+          +'- 3~6개\n'
+          +'- SNS 텍스트에서 인용하거나 참고한 원문의 실제 내용(수치, 사실, 데이터)만 추출\n'
+          +'\nSNS 텍스트:\n'+t;
+        callGemini(key,[{role:'user',parts:[{text:sysP}]}]).then(function(res){
+          var txt=(res&&res.candidates&&res.candidates[0]&&res.candidates[0].content&&res.candidates[0].content.parts&&res.candidates[0].content.parts[0]&&res.candidates[0].content.parts[0].text)||'';
+          bodyEl.innerHTML='<div style="display:flex;gap:16px;height:100%">'
+            +'<div style="flex:1;display:flex;flex-direction:column;background:#fff;border-radius:12px;border:1px solid #E2E8F0;overflow:hidden">'
+            +'<div style="padding:10px 14px;border-bottom:1px solid #E2E8F0;font-size:11px;font-weight:700;color:#64748B">SNS 텍스트</div>'
+            +'<div style="padding:14px;font-size:12px;line-height:1.8;color:#334155;white-space:pre-wrap;flex:1;overflow-y:auto">'+esc(t)+'</div>'
+            +'</div>'
+            +'<div style="flex:1;display:flex;flex-direction:column;background:#fff;border-radius:12px;border:1px solid #E2E8F0;overflow:hidden">'
+            +'<div style="padding:10px 14px;border-bottom:1px solid #E2E8F0;font-size:11px;font-weight:700;color:#64748B">원문 핵심 문장</div>'
+            +'<div style="padding:14px;font-size:12px;line-height:1.8;color:#334155;white-space:pre-wrap;flex:1">'+esc(txt)+'</div>'
+            +'</div></div>';
+          qs('#sns-preview-modal').querySelector('h3').textContent='원본 대조';
+          btn.disabled=false;btn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/></svg>';
+        }).catch(function(err){btn.disabled=false;btn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/></svg>';toast('실패');});
+      });
+    }
+    el.querySelector('.sns-saved-item-text').addEventListener('click',openSavedEdit);
+    el.querySelector('.sns-saved-view-link').addEventListener('click',openSavedEdit);
+    el.querySelector('.sns-saved-item-del').addEventListener('click',function(e){
+      e.stopPropagation();
+      snsSaved=snsSaved.filter(function(s){return s.id!==item.id;});
+      saveSnsStorage();
+      renderSnsSavedList();
+      renderSidebarSnsSaved();
+    });
+    list.appendChild(el);
+  });
+}
+
+renderSnsSavedList();
+
+/* ---- SNS 히스토리 ---- */
+var snsHistory=[];
+try{snsHistory=JSON.parse(localStorage.getItem('sns-history')||'[]');}catch(e){snsHistory=[];}
+function saveSnsHistory(){localStorage.setItem('sns-history',JSON.stringify(snsHistory));}
+
+function addSnsHistory(candidates,urls){
+  snsHistory.unshift({id:Date.now(),date:today(),urls:urls.map(function(u){return u.url;}),candidates:candidates});
+  if(snsHistory.length>20)snsHistory=snsHistory.slice(0,20);
+  saveSnsHistory();
+  renderSnsHistoryList();
+}
+
+function renderSnsHistoryList(){
+  var list=qs('#sns-history-list');
+  var countEl=qs('#sns-history-count');
+  if(countEl)countEl.textContent=snsHistory.length>0?'('+snsHistory.length+')':'';
+  if(!list)return;
+  if(snsHistory.length===0){
+    list.innerHTML='<p style="color:var(--light);font-size:12px;text-align:center;padding:32px 12px">아직 히스토리가 없어요</p>';return;
+  }
+  list.innerHTML='';
+  snsHistory.forEach(function(item,hi){
+    var el=document.createElement('div');
+    el.className='sns-saved-item';
+    var urlPreview=item.urls[0]?item.urls[0].replace(/^https?:\/\//,'').substring(0,35)+'...':'';
+    var fbPreview=(item.candidates.facebook&&item.candidates.facebook[0])?(typeof item.candidates.facebook[0]==='object'?item.candidates.facebook[0].text:item.candidates.facebook[0]):'';
+    fbPreview=fbPreview.substring(0,60)+'...';
+    el.innerHTML='<div class="sns-saved-item-top">'
+      +'<span style="font-size:10px;font-weight:600;color:var(--text)">'+item.date+'</span>'
+      +'<button class="sns-saved-item-del" data-shi="'+hi+'">✕</button>'
+      +'</div>'
+      +'<div style="font-size:10px;color:var(--light);margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(urlPreview)+'</div>'
+      +'<div class="sns-saved-item-text" style="cursor:pointer">'+esc(fbPreview)+'</div>';
+    el.querySelector('.sns-saved-item-text').addEventListener('click',function(){
+      snsCandidates=item.candidates;
+      snsActivePlatform='facebook';
+      qsa('.sns-ptab').forEach(function(t){t.classList.remove('active');});
+      qs('[data-platform="facebook"]').classList.add('active');
+      renderSnsCandidates();
+      qs('#sns-history-panel').classList.add('hidden');
+      toast('히스토리에서 불러옴');
+    });
+    el.querySelector('.sns-saved-item-del').addEventListener('click',function(e){
+      e.stopPropagation();
+      snsHistory.splice(hi,1);
+      saveSnsHistory();
+      renderSnsHistoryList();
+    });
+    list.appendChild(el);
+  });
+}
+renderSnsHistoryList();
+
+/* ---- 사이드바 SNS 탭 전환 ---- */
+qsa('.sidebar-tab-sns').forEach(function(tab){
+  tab.addEventListener('click',function(){
+    qsa('.sidebar-tab-sns').forEach(function(t){t.classList.remove('active');});
+    tab.classList.add('active');
+    var which=tab.dataset.stab;
+    qs('#sidebar-sns-saved').style.display=(which==='sns-saved')?'':'none';
+    qs('#sidebar-sns-history').style.display=(which==='sns-history')?'':'none';
+  });
+});
+
+/* ---- 사이드바 SNS 저장 목록 렌더링 ---- */
+function renderSidebarSnsSaved(){
+  var list=qs('#sidebar-sns-saved');if(!list)return;
+  if(snsSaved.length===0){list.innerHTML='<p class="history-empty">아직 저장된 텍스트가 없어요</p>';return;}
+  list.innerHTML='';
+  snsSaved.forEach(function(item){
+    var el=document.createElement('div');el.className='history-item';el.style.cursor='pointer';
+    el.innerHTML='<div style="display:flex;justify-content:space-between;align-items:start">'
+      +'<div class="hi-title">'+esc((item.text||'').substring(0,50))+'</div>'
+      +'<button class="hi-delete" style="background:none;border:none;color:#ccc;cursor:pointer;font-size:14px;padding:0 2px;flex-shrink:0">✕</button>'
+      +'</div>'
+      +'<div class="hi-date">클릭해서 복사 · '+item.date+'</div>'
+      +'<span class="hi-tag" style="background:#F1F5F9;color:var(--text);border:1px solid var(--border)">'+platformIcons[item.platform]+' '+platformNames[item.platform]+'</span>';
+    el.addEventListener('click',function(e){
+      if(e.target.closest('.hi-delete'))return;
+      /* 저장된 텍스트 수정 모달 바로 열기 (일반 수정과 동일한 UI) */
+      var labelColors=['sns-label-0','sns-label-1','sns-label-2','sns-label-3','sns-label-4'];
+      var bodyEl=qs('#sns-preview-body');
+      bodyEl.style.background='#F8FAFC';
+      bodyEl.innerHTML='<div style="margin-bottom:14px;display:flex;align-items:center;justify-content:space-between">'
+        +'<span class="sns-card-label '+labelColors[0]+'" style="font-size:12px;padding:5px 14px">'+platformIcons[item.platform]+' '+platformNames[item.platform]+'</span>'
+        +'</div>'
+        +'<div id="sidebar-saved-edit-text" contenteditable="true" style="background:#fff;border:1.5px solid #E2E8F0;border-radius:12px;padding:18px;font-size:14px;line-height:1.8;color:#1E293B;white-space:pre-wrap;outline:none;min-height:120px">'+esc(item.text)+'</div>'
+        +'<div style="display:flex;gap:8px;align-items:center;margin-top:14px;flex-wrap:wrap">'
+        +'<select id="sidebar-saved-tone" class="sns-tone-select" style="font-size:12px;padding:6px 12px"><option value="">톤</option><option value="casual">캐주얼</option><option value="professional">전문적</option><option value="hooking">후킹</option></select>'
+        +'<select id="sidebar-saved-style" class="sns-style-select" style="font-size:12px;padding:6px 12px"><option value="">스타일</option><option value="data">수치 강조</option><option value="story">스토리텔링</option><option value="question">질문형</option><option value="problem">문제의식</option><option value="reversal">반전 포인트</option></select>'
+        +'<button id="sidebar-saved-regen" class="btn-primary btn-sm">재생성</button>'
+        +'<button id="sidebar-saved-source" class="sns-modal-icon-btn" title="원본 대조"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/></svg></button>'
+        +'<div style="flex:1"></div>'
+        +'<button id="sidebar-saved-save" class="sns-modal-icon-btn saved" title="저장됨"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg></button>'
+        +'<button id="sidebar-saved-copy" class="sns-modal-icon-btn" title="복사"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>'
+        +'</div>';
+      qs('#sns-preview-modal').querySelector('h3').textContent='저장된 텍스트 편집';
+      qs('#sns-preview-modal').classList.remove('hidden');
+      qs('#sidebar').classList.remove('open');
+
+      var modalText=qs('#sidebar-saved-edit-text');
+
+      /* 복사 */
+      qs('#sidebar-saved-copy').addEventListener('click',function(){
+        var t=modalText.innerText||modalText.textContent;
+        navigator.clipboard.writeText(t).then(function(){toast('복사됨!');});
+      });
+
+      /* 저장 (수정 내용 저장) */
+      qs('#sidebar-saved-save').addEventListener('click',function(){
+        var t=modalText.innerText||modalText.textContent;
+        item.text=t;
+        saveSnsStorage();
+        renderSnsSavedList();
+        renderSidebarSnsSaved();
+        toast('수정 내용 저장됨 ✓');
+      });
+
+      /* 원본 대조 */
+      qs('#sidebar-saved-source').addEventListener('click',function(){
+        var t=modalText.innerText||modalText.textContent;
+        var key=getKey();if(!key){toast('API 키를 설정해주세요');return;}
+        var btn=qs('#sidebar-saved-source');btn.disabled=true;btn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spin"><circle cx="12" cy="12" r="10"/></svg>';
+        var sysP='아래 SNS 포스트 텍스트를 분석해서, 이 텍스트가 참고한 원문의 핵심 문장들을 추출해줘.\n\n'
+          +'출력 형식:\n'
+          +'- 원문에서 직접 따온 핵심 문장만 불릿(-)으로 나열\n'
+          +'- 3~6개\n'
+          +'- SNS 텍스트에서 인용하거나 참고한 원문의 실제 내용(수치, 사실, 데이터)만 추출\n'
+          +'- SNS 텍스트 자체를 반복하지 마. 원문 근거만.\n'
+          +'- 마크다운 금지, 간결하게';
+        var reqBody=JSON.stringify({system_instruction:{parts:[{text:sysP}]},contents:[{parts:[{text:'SNS 텍스트:\n'+t}]}],generationConfig:{temperature:0.3,maxOutputTokens:2048}});
+        fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key='+key,{
+          method:'POST',headers:{'Content-Type':'application/json'},body:reqBody
+        }).then(function(r){return r.json();}).then(function(d){
+          var c=d.candidates&&d.candidates[0];
+          if(!c||!c.content||!c.content.parts)throw new Error('응답 오류');
+          var txt='';for(var i=0;i<c.content.parts.length;i++){if(c.content.parts[i].text)txt+=c.content.parts[i].text;}
+          txt=txt.replace(/\*\*(.+?)\*\*/g,'$1');
+          bodyEl.innerHTML='<div style="display:flex;gap:16px;align-items:stretch">'
+            +'<div style="flex:1;background:#fff;border:1.5px solid #E2E8F0;border-radius:12px;overflow:hidden;display:flex;flex-direction:column">'
+            +'<div style="padding:10px 14px;border-bottom:1px solid #E2E8F0;background:#FAFBFF;font-size:11px;font-weight:700;color:#4F46E5">SNS 텍스트</div>'
+            +'<div style="padding:14px;font-size:12px;line-height:1.8;color:#1E293B;white-space:pre-wrap;flex:1">'+esc(t)+'</div>'
+            +'</div>'
+            +'<div style="flex:1;background:#fff;border:1.5px solid #E2E8F0;border-radius:12px;overflow:hidden;display:flex;flex-direction:column">'
+            +'<div style="padding:10px 14px;border-bottom:1px solid #E2E8F0;background:#FFF7ED;font-size:11px;font-weight:700;color:#EA580C">원문에서 따온 핵심 문장</div>'
+            +'<div style="padding:14px;font-size:12px;line-height:1.8;color:#334155;white-space:pre-wrap;flex:1">'+esc(txt)+'</div>'
+            +'</div></div>';
+          qs('#sns-preview-modal').querySelector('h3').textContent='원본 대조';
+          btn.disabled=false;btn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/></svg>';
+        }).catch(function(err){btn.disabled=false;btn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/></svg>';toast('실패: '+(err&&err.message||'오류'));});
+      });
+
+      /* 재생성 */
+      qs('#sidebar-saved-regen').addEventListener('click',function(){
+        var t=modalText.innerText||modalText.textContent;
+        var tone=qs('#sidebar-saved-tone').value;
+        var style=qs('#sidebar-saved-style').value;
+        var key=getKey();if(!key){toast('API 키를 설정해주세요');return;}
+        var btn=qs('#sidebar-saved-regen');btn.disabled=true;btn.textContent='⏳';
+        var toneMap={casual:'캐주얼하고 친근한',professional:'전문적이고 신뢰감 있는',hooking:'강렬하고 후킹되는'};
+        var styleMap={data:'수치/데이터 강조',story:'스토리텔링',question:'질문형',problem:'문제의식 제기',reversal:'반전 포인트'};
+        var sysP='아래 SNS 텍스트를 다시 작성해줘.\n\n';
+        if(tone)sysP+='톤: '+toneMap[tone]+'\n';
+        if(style)sysP+='스타일: '+styleMap[style]+'\n';
+        sysP+='\n기존 텍스트:\n'+t+'\n\n새로운 텍스트만 출력해줘.';
+        callGemini(key,[{role:'user',parts:[{text:sysP}]}]).then(function(res){
+          var txt=(res&&res.candidates&&res.candidates[0]&&res.candidates[0].content&&res.candidates[0].content.parts&&res.candidates[0].content.parts[0]&&res.candidates[0].content.parts[0].text)||'';
+          modalText.textContent=txt.trim();
+          btn.disabled=false;btn.textContent='재생성';toast('재생성 완료!');
+        }).catch(function(err){btn.disabled=false;btn.textContent='재생성';toast('실패: '+(err&&err.message||'오류'));});
+      });
+    });
+    el.querySelector('.hi-delete').addEventListener('click',function(e){
+      e.stopPropagation();
+      snsSaved=snsSaved.filter(function(s){return s.id!==item.id;});
+      saveSnsStorage();renderSidebarSnsSaved();renderSnsSavedList();
+    });
+    list.appendChild(el);
+  });
+}
+
+/* ---- 사이드바 SNS 히스토리 렌더링 ---- */
+function renderSidebarSnsHistory(){
+  var list=qs('#sidebar-sns-history');if(!list)return;
+  if(snsHistory.length===0){list.innerHTML='<p class="history-empty">아직 히스토리가 없어요</p>';return;}
+  list.innerHTML='';
+  snsHistory.forEach(function(item,hi){
+    var el=document.createElement('div');el.className='history-item';el.style.cursor='pointer';
+    var urlPreview=item.urls&&item.urls[0]?item.urls[0].replace(/^https?:\/\//,'').substring(0,35)+'...':'';
+    var fbPreview=(item.candidates.facebook&&item.candidates.facebook[0])?(typeof item.candidates.facebook[0]==='object'?item.candidates.facebook[0].text:item.candidates.facebook[0]):'';
+    el.innerHTML='<div style="display:flex;justify-content:space-between;align-items:start">'
+      +'<div class="hi-title">'+esc(fbPreview.substring(0,50))+'</div>'
+      +'<button class="hi-delete" style="background:none;border:none;color:#ccc;cursor:pointer;font-size:14px;padding:0 2px;flex-shrink:0">✕</button>'
+      +'</div>'
+      +'<div class="hi-date">'+item.date+' · '+esc(urlPreview)+'</div>';
+    el.addEventListener('click',function(e){
+      if(e.target.closest('.hi-delete'))return;
+      snsCandidates=item.candidates;
+      snsActivePlatform='facebook';
+      qsa('.sns-ptab').forEach(function(t){t.classList.remove('active');});
+      qs('[data-platform="facebook"]').classList.add('active');
+      /* 뉴스레터 패널 숨기기 */
+      qs('#panels').classList.add('hidden');
+      qs('#editor-toolbar').classList.add('hidden');
+      var hero=qs('#hero-section');if(hero)hero.classList.add('hidden');
+      var tcdd=qs('#title-candidates-dropdown');if(tcdd)tcdd.classList.add('hidden');
+      /* SNS 결과 보이기 */
+      qs('#sns-section').classList.add('hidden');
+      qs('#sns-results').classList.remove('hidden');
+      renderSnsCandidates();
+      qs('#sidebar').classList.remove('open');
+      toast('히스토리에서 불러옴');
+    });
+    el.querySelector('.hi-delete').addEventListener('click',function(e){
+      e.stopPropagation();
+      snsHistory.splice(hi,1);saveSnsHistory();renderSidebarSnsHistory();renderSnsHistoryList();
+    });
+    list.appendChild(el);
+  });
+}
+
+/* 히스토리 패널 토글 */
+qs('#sns-history-toggle').addEventListener('click',function(){
+  var panel=qs('#sns-history-panel');
+  qs('#sns-saved-panel').classList.add('hidden');
+  panel.classList.toggle('hidden');
+  renderSnsHistoryList();
+});
+qs('#sns-history-panel-close').addEventListener('click',function(){
+  qs('#sns-history-panel').classList.add('hidden');
+});
+
+/* ---- 조합함 (수동 선택 + AI 다듬기) ---- */
+var snsMixItems=[];
+
+function updateMixCount(){
+  var el=qs('#sns-mix-count');
+  if(el)el.textContent=snsMixItems.length>0?'('+snsMixItems.length+')':'';
+}
+
+/* 텍스트 선택 시 플로팅 버튼 */
+var mixFloat=document.createElement('button');
+mixFloat.className='rewrite-float';
+mixFloat.textContent='📌 조합함에 추가';
+mixFloat.style.display='none';
+document.body.appendChild(mixFloat);
+
+document.addEventListener('mouseup',function(e){
+  var wrap=qs('#sns-candidates-wrap');
+  var preview=qs('#sns-preview-body');
+  var inWrap=wrap&&wrap.contains(e.target);
+  var inPreview=preview&&preview.contains(e.target);
+  if(!inWrap&&!inPreview){mixFloat.style.display='none';return;}
+  var sel=window.getSelection();
+  if(!sel||sel.isCollapsed||!sel.toString().trim()){mixFloat.style.display='none';return;}
+  var range=sel.getRangeAt(0);
+  var rect=range.getBoundingClientRect();
+  mixFloat.style.display='block';
+  mixFloat.style.left=(rect.left+rect.width/2-60)+'px';
+  mixFloat.style.top=(rect.top-36+window.scrollY)+'px';
+  mixFloat._selectedText=sel.toString().trim();
+});
+mixFloat.addEventListener('mousedown',function(e){
+  e.preventDefault();
+  if(mixFloat._selectedText){
+    snsMixItems.push({id:Date.now(),text:mixFloat._selectedText});
+    updateMixCount();
+    toast('📌 조합함에 추가됨 ('+snsMixItems.length+'개)');
+    window.getSelection().removeAllRanges();
+  }
+  mixFloat.style.display='none';
+});
+document.addEventListener('mousedown',function(e){if(e.target!==mixFloat)mixFloat.style.display='none';});
+
+/* 조합 모달 */
+qs('#sns-mix-btn').addEventListener('click',function(){
+  if(snsMixItems.length===0){toast('후보에서 마음에 드는 문장을 드래그 선택해서 추가하세요');return;}
+  showMixModal();
+});
+
+function showMixModal(){
+  var body=qs('#sns-preview-body');
+  body.style.background='#F8FAFC';
+
+  var html='<div style="text-align:center;margin-bottom:16px"><div style="font-size:14px;font-weight:700;color:#1E293B;margin-bottom:4px">🧩 조합함</div><div style="font-size:12px;color:#64748B">드래그로 순서 변경 · 다 모았으면 AI 다듬기 또는 그대로 복사</div></div>';
+
+  /* 문장 목록 */
+  html+='<div id="mix-list">';
+  snsMixItems.forEach(function(item,idx){
+    html+='<div class="mix-item" data-midx="'+idx+'" draggable="true" style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;margin-bottom:6px;background:#fff;border:1.5px solid #E2E8F0;border-radius:10px;cursor:grab;transition:all .15s">'
+      +'<span style="font-size:12px;color:#94A3B8;font-weight:700;flex-shrink:0;margin-top:1px">'+(idx+1)+'</span>'
+      +'<div style="flex:1;font-size:12px;line-height:1.6;color:#334155">'+esc(item.text)+'</div>'
+      +'<button class="mix-del" data-mid="'+item.id+'" style="background:none;border:none;color:#ccc;cursor:pointer;font-size:14px;flex-shrink:0;padding:0 2px">✕</button>'
+      +'</div>';
+  });
+  html+='</div>';
+
+  /* 미리보기 */
+  html+='<div style="margin-top:14px;font-size:11px;font-weight:700;color:#94A3B8;margin-bottom:6px">미리보기</div>';
+  html+='<div style="background:#fff;border:1.5px solid #E2E8F0;border-radius:12px;padding:16px;font-size:13px;line-height:1.8;color:#1E293B;white-space:pre-wrap" id="mix-preview">'+esc(snsMixItems.map(function(m){return m.text;}).join('\n\n'))+'</div>';
+
+  /* 버튼들 */
+  html+='<div style="display:flex;gap:8px;justify-content:center;margin-top:14px;flex-wrap:wrap">'
+    +'<button id="mix-ai-polish" class="btn-primary btn-sm" style="padding:10px 24px">✨ AI 다듬기</button>'
+    +'<button id="mix-copy-raw" class="btn-primary btn-sm" style="padding:10px 24px;background:#475569">📋 그대로 복사</button>'
+    +'<button id="mix-clear" class="btn-ghost" style="padding:10px 16px">전체 삭제</button>'
+    +'</div>';
+  html+='<div id="mix-ai-result" style="display:none;margin-top:16px"></div>';
+
+  body.innerHTML=html;
+  qs('#sns-preview-modal').querySelector('h3').textContent='🧩 조합함';
+  qs('#sns-preview-modal').classList.remove('hidden');
+
+  /* 삭제 */
+  body.querySelectorAll('.mix-del').forEach(function(btn){
+    btn.addEventListener('click',function(e){
+      e.stopPropagation();
+      snsMixItems=snsMixItems.filter(function(m){return m.id!==+btn.dataset.mid;});
+      updateMixCount();
+      if(snsMixItems.length===0){qs('#sns-preview-modal').classList.add('hidden');return;}
+      showMixModal();
+    });
+  });
+
+  /* 드래그 순서 변경 */
+  var dragIdx=null;
+  body.querySelectorAll('.mix-item').forEach(function(el){
+    el.addEventListener('dragstart',function(e){dragIdx=+el.dataset.midx;el.style.opacity='0.4';e.dataTransfer.effectAllowed='move';});
+    el.addEventListener('dragend',function(){el.style.opacity='1';dragIdx=null;});
+    el.addEventListener('dragover',function(e){e.preventDefault();});
+    el.addEventListener('drop',function(e){
+      e.preventDefault();var dropIdx=+el.dataset.midx;
+      if(dragIdx!==null&&dragIdx!==dropIdx){var moved=snsMixItems.splice(dragIdx,1)[0];snsMixItems.splice(dropIdx,0,moved);showMixModal();}
+    });
+  });
+
+  /* 그대로 복사 */
+  qs('#mix-copy-raw').addEventListener('click',function(){
+    var t=snsMixItems.map(function(m){return m.text;}).join('\n\n');
+    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(function(){toast('복사됨!');});
+    else{var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('복사됨!');}
+  });
+
+  /* 전체 삭제 */
+  qs('#mix-clear').addEventListener('click',function(){
+    snsMixItems=[];updateMixCount();
+    qs('#sns-preview-modal').classList.add('hidden');
+    toast('조합함 비워짐');
+  });
+
+  /* AI 다듬기 — 내용 유지, 문맥만 자연스럽게 */
+  qs('#mix-ai-polish').addEventListener('click',function(){
+    var key=getKey();if(!key){toast('API 키를 설정해주세요');return;}
+    var btn=qs('#mix-ai-polish');
+    btn.disabled=true;btn.textContent='⏳ AI 다듬는 중...';
+    var rawText=snsMixItems.map(function(m){return m.text;}).join('\n\n');
+    var sysPrompt='아래 문장들을 하나의 자연스러운 SNS 포스트로 다듬어줘.\n\n'
+      +'★ 핵심 규칙: 각 문장의 내용과 수치를 절대 변경하지 마. 있는 그대로 유지해.\n'
+      +'★ 문장 간 연결만 자연스럽게 다듬어. 접속사 추가, 어색한 이음새 수정 정도만.\n'
+      +'★ 문장을 삭제하거나 새로운 내용을 추가하지 마.\n'
+      +'★ 마크다운(**, * 등) 절대 사용 금지\n'
+      +'★ 플랫폼: '+snsActivePlatform+'\n\n'
+      +'다듬어진 텍스트만 출력. 설명 없이.';
+    var reqBody=JSON.stringify({
+      system_instruction:{parts:[{text:sysPrompt}]},
+      contents:[{parts:[{text:rawText}]}],
+      generationConfig:{temperature:0.3,maxOutputTokens:4096}
+    });
+    fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key='+key,{
+      method:'POST',headers:{'Content-Type':'application/json'},body:reqBody
+    }).then(function(r){return r.json();}).then(function(d){
+      var c=d.candidates&&d.candidates[0];
+      if(!c||!c.content||!c.content.parts)throw new Error('AI 응답 오류');
+      var txt='';for(var i=0;i<c.content.parts.length;i++){if(c.content.parts[i].text)txt+=c.content.parts[i].text;}
+      txt=cleanSnsText(txt);
+      var resultEl=qs('#mix-ai-result');
+      resultEl.style.display='block';
+      resultEl.innerHTML='<div style="background:#F0FDF4;border:1.5px solid #BBF7D0;border-radius:12px;padding:16px">'
+        +'<div style="font-size:11px;font-weight:700;color:#16A34A;margin-bottom:8px">✨ AI 다듬기 결과 (내용 동일, 문맥만 정리)</div>'
+        +'<div style="font-size:13px;line-height:1.8;color:#1E293B;white-space:pre-wrap" id="mix-polished">'+esc(txt)+'</div>'
+        +'</div>'
+        +'<div style="display:flex;gap:8px;justify-content:center;margin-top:10px">'
+        +'<button id="mix-pol-copy" class="btn-primary btn-sm" style="padding:8px 24px">📋 복사</button>'
+        +'<button id="mix-pol-save" class="btn-ghost" style="padding:8px 16px">⭐ 저장</button>'
+        +'</div>';
+      btn.disabled=false;btn.textContent='✨ AI 다듬기';
+      qs('#mix-pol-copy').addEventListener('click',function(){
+        var t=qs('#mix-polished').textContent;
+        if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(function(){toast('복사됨!');});
+      });
+      qs('#mix-pol-save').addEventListener('click',function(){
+        var t=qs('#mix-polished').textContent;
+        snsSaved.unshift({id:Date.now(),platform:snsActivePlatform,text:t,label:'AI 다듬기',date:today()});
+        if(snsSaved.length>50)snsSaved=snsSaved.slice(0,50);
+        saveSnsStorage();renderSnsSavedList();renderSidebarSnsSaved();
+        toast('저장됨!');
+      });
+    }).catch(function(err){
+      btn.disabled=false;btn.textContent='✨ AI 다듬기';
+      toast('다듬기 실패: '+(err&&err.message||'오류'));
+    });
+  });
+}
+
+/* ---- SNS 미리보기 ---- */
+function showSnsPreview(platform,text){
+  var body=qs('#sns-preview-body');
+  var escaped=esc(text).replace(/\n/g,'<br>');
+  var html='';
+
+  if(platform==='facebook'){
+    html='<div style="background:#fff;border-radius:8px;box-shadow:0 1px 2px rgba(0,0,0,.2);max-width:540px;margin:0 auto;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif">'
+      +'<div style="display:flex;align-items:center;gap:10px;padding:12px 16px">'
+      +'<div style="width:40px;height:40px;border-radius:50%;background:#f0f0f0;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden"><span style="font-size:9px;font-weight:800;color:#333">IGAW</span></div>'
+      +'<div style="flex:1"><div style="font-size:14px;font-weight:700;color:#050505">IGAWorks 아이지에이웍스</div><div style="font-size:12px;color:#65676B">5일 · <span style="font-size:11px">🌐</span></div></div>'
+      +'</div>'
+      +'<div style="padding:0 16px 12px;font-size:14px;line-height:1.7;color:#050505;white-space:pre-wrap">'+escaped+'</div>'
+      +'<div style="background:#F0F2F5;border-top:1px solid #E4E6EB;border-bottom:1px solid #E4E6EB;padding:12px 16px">'
+      +'<div style="font-size:10px;color:#65676B;text-transform:uppercase;letter-spacing:0.3px">IGAWORKSBLOG.COM</div>'
+      +'<div style="font-size:15px;font-weight:600;color:#050505;margin-top:4px;line-height:1.3">콘텐츠 제목이 여기에 표시됩니다</div>'
+      +'<div style="font-size:13px;color:#65676B;margin-top:2px">igaworksblog.com</div>'
+      +'</div>'
+      +'<div style="padding:8px 16px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid #E4E6EB">'
+      +'<div style="display:flex;gap:16px">'
+      +'<span style="font-size:14px;color:#65676B;cursor:default">👍 추천</span>'
+      +'<span style="font-size:14px;color:#65676B;cursor:default">💬 댓글</span>'
+      +'<span style="font-size:14px;color:#65676B;cursor:default">↗ 퍼가기</span>'
+      +'</div>'
+      +'</div></div>';
+  } else if(platform==='linkedin'){
+    html='<div style="background:#fff;border-radius:8px;border:1px solid #E0E0E0;max-width:540px;margin:0 auto;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif">'
+      +'<div style="display:flex;align-items:flex-start;gap:10px;padding:12px 16px">'
+      +'<div style="width:48px;height:48px;border-radius:50%;background:#f0f0f0;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden"><span style="font-size:9px;font-weight:800;color:#333">IGAW</span></div>'
+      +'<div style="flex:1"><div style="font-size:14px;font-weight:700;color:#000">IGAWorks 아이지에이웍스</div><div style="font-size:12px;color:#666;line-height:1.3">팔로워 1,019명</div><div style="font-size:12px;color:#999">4시간 · <span style="font-size:11px">🌐</span></div></div>'
+      +'</div>'
+      +'<div style="padding:0 16px 14px;font-size:14px;line-height:1.7;color:#191919;white-space:pre-wrap">'+escaped+'</div>'
+      +'<div style="padding:0 16px 8px;display:flex;gap:4px;align-items:center"><span style="font-size:11px">👍❤️</span><span style="font-size:12px;color:#666">42</span></div>'
+      +'<div style="border-top:1px solid #E0E0E0;padding:0 16px">'
+      +'<div style="display:flex;justify-content:space-around;padding:8px 0">'
+      +'<span style="font-size:13px;color:#666;cursor:default">👍 추천</span>'
+      +'<span style="font-size:13px;color:#666;cursor:default">🗨 댓글</span>'
+      +'<span style="font-size:13px;color:#666;cursor:default">🔄 퍼가기</span>'
+      +'</div></div></div>';
+  } else if(platform==='instagram'){
+    html='<div style="background:#fff;border:1px solid #DBDBDB;border-radius:8px;max-width:400px;margin:0 auto;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif">'
+      +'<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid #EFEFEF">'
+      +'<div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);display:flex;align-items:center;justify-content:center;flex-shrink:0"><div style="width:28px;height:28px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center"><div style="width:26px;height:26px;border-radius:50%;background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#333">IGAW</div></div></div>'
+      +'<div style="font-size:13px;font-weight:600;color:#262626">igaworks_official</div>'
+      +'</div>'
+      +'<div style="background:#F8F8F8;padding:60px 20px;text-align:center;font-size:11px;color:#999;border-bottom:1px solid #EFEFEF">이미지 영역</div>'
+      +'<div style="padding:10px 14px 4px;display:flex;gap:14px">'
+      +'<span style="font-size:22px;cursor:default">♡</span>'
+      +'<span style="font-size:22px;cursor:default">💬</span>'
+      +'<span style="font-size:22px;cursor:default">📤</span>'
+      +'</div>'
+      +'<div style="padding:4px 14px 12px;font-size:13px;line-height:1.5;color:#262626;white-space:pre-wrap"><span style="font-weight:600">igaworks_official</span> '+escaped+'</div>'
+      +'<div style="padding:0 14px 12px;font-size:11px;color:#999">4시간 전</div>'
+      +'</div>';
+  }
+
+  body.innerHTML=html;
+  body.style.background=(platform==='instagram')?'#FAFAFA':'#F0F2F5';
+  qs('#sns-preview-modal').querySelector('h3').textContent='SNS 미리보기';
+  qs('#sns-preview-modal').classList.remove('hidden');
+}
+
+qs('#sns-preview-close').addEventListener('click',function(){
+  qs('#sns-preview-modal').classList.add('hidden');
+});
+
+/* ---- 개별 후보 재생성 (톤 조절 포함) ---- */
+var snsLastUrls=[];
+
+function regenSingleCandidate(platform,idx,tone){
+  var key=getKey();
+  if(!key){toast('API 키를 설정해주세요');return Promise.reject();}
+  var existing=snsCandidates[platform]||[];
+  var current=existing[idx];
+  var currentText=(typeof current==='object'&&current.text)?current.text:current;
+  var toneGuide='';
+  var parts=tone.split('+');
+  var guides=[];
+  parts.forEach(function(t){
+    if(t==='casual')guides.push('캐주얼하고 친근하게. 이모지 활용. 딱딱한 표현 제거.');
+    else if(t==='professional')guides.push('전문적이고 격식있게. 이모지 최소화. 비즈니스 용어 활용.');
+    else if(t==='hooking')guides.push('첫 문장에서 강렬하게 후킹. 충격적인 수치나 반전, 질문으로 시작.');
+    else if(t==='data')guides.push('수치와 데이터를 전면에. 구체적인 숫자, 퍼센트, 비교 수치로 설득력 있게.');
+    else if(t==='story')guides.push('스토리텔링 방식. 상황 묘사 → 문제 → 해결 흐름으로 자연스럽게.');
+    else if(t==='question')guides.push('질문형. 독자에게 질문을 던지며 시작, 궁금증 유발 구조.');
+    else if(t==='problem')guides.push('문제의식 강하게 제기. 업계 pain point나 변화를 짚고 중요성 강조.');
+    else if(t==='reversal')guides.push('반전 포인트. 예상과 다른 결과나 의외의 사실로 시작해서 흥미 유발.');
+  });
+  toneGuide=guides.length>0?guides.join(' 그리고 '):'다른 각도와 어조로 완전히 새롭게 작성.';
+
+  var sysPrompt='당신은 SNS 마케팅 전문가입니다. 아래 텍스트를 같은 플랫폼('+platform+')용으로 다시 작성해주세요.\n\n'
+    +'★ '+toneGuide+'\n'
+    +'★ 마크다운(**, * 등) 절대 사용 금지\n'
+    +'★ label(특징 2~4자)과 text를 JSON으로 출력\n'
+    +'★ 기존 내용의 핵심 메시지는 유지하되 표현과 구조를 바꿔\n\n'
+    +'출력: {"label":"특징","text":"새 텍스트"}\n'
+    +'JSON만 출력. 설명 없이.';
+
+  var userMsg='기존 텍스트:\n'+currentText;
+
+  var reqBody=JSON.stringify({
+    system_instruction:{parts:[{text:sysPrompt}]},
+    contents:[{parts:[{text:userMsg}]}],
+    generationConfig:{temperature:0.9,maxOutputTokens:4096}
+  });
+
+  return fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key='+key,{
+    method:'POST',headers:{'Content-Type':'application/json'},body:reqBody
+  }).then(function(r){return r.json();}).then(function(d){
+    var c=d.candidates&&d.candidates[0];
+    if(!c||!c.content||!c.content.parts)throw new Error('AI 응답 오류');
+    var txt='';
+    for(var i=0;i<c.content.parts.length;i++){if(c.content.parts[i].text)txt+=c.content.parts[i].text;}
+    var jsonStr=null;
+    var cb=txt.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+    if(cb)jsonStr=cb[1].trim();
+    if(!jsonStr){var s=txt.indexOf('{'),e=txt.lastIndexOf('}');if(s!==-1&&e>s)jsonStr=txt.substring(s,e+1);}
+    if(!jsonStr)throw new Error('파싱 실패');
+    var result=JSON.parse(jsonStr);
+    return result;
+  });
+}
+
+})();
+/* ===== END SNS 모듈 ===== */
+
 })();
