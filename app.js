@@ -1,9 +1,11 @@
-/* IGAWorks Newsletter Editor v4 — 순살 스타일 */
+/* IGAWorks Newsletter Editor v220 — 순살 스타일 */
 (function(){
 "use strict";
 
 function qs(s){return document.querySelector(s);}
 function qsa(s){return document.querySelectorAll(s);}
+/* null-safe 이벤트 리스너 — 요소 없어도 크래시 안 남 */
+function on(sel,evt,fn){var el=(typeof sel==='string')?qs(sel):sel;if(el)el.addEventListener(evt,fn);}
 function esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML;}
 function today(){var d=new Date();return d.getFullYear()+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+String(d.getDate()).padStart(2,'0');}
 function selectedDate(){var el=qs('#nl-date');if(el&&el.value){var p=el.value.split('-');return p[0]+'.'+p[1]+'.'+p[2];}return today();}
@@ -16,6 +18,28 @@ function hideErr(){qs('#error-msg').classList.add('hidden');}
 function rgbToHex(rgb){if(!rgb)return'';if(rgb.charAt(0)==='#')return rgb;var m=rgb.match(/(\d+)/g);if(!m||m.length<3)return'';return'#'+((1<<24)+(+m[0]<<16)+(+m[1]<<8)+(+m[2])).toString(16).slice(1);}
 function stripMd(s){return s.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');}
 function cleanBr(s){return(s||'').replace(/<br\s*\/?>/gi,'').trim();}
+/* 라벨 이모지 + 테두리 색상 매핑 */
+var labelStyleMap={
+  '수치':  {emoji:'📊',border:'#3B82F6'},
+  '데이터':{emoji:'📊',border:'#3B82F6'},
+  '스토리':{emoji:'📖',border:'#F59E0B'},
+  '질문':  {emoji:'❓',border:'#8B5CF6'},
+  '문제':  {emoji:'⚡',border:'#EF4444'},
+  '반전':  {emoji:'🔄',border:'#10B981'},
+  '실용':  {emoji:'🛠',border:'#6366F1'},
+  '감성':  {emoji:'💛',border:'#F59E0B'},
+  '후킹':  {emoji:'🎯',border:'#EF4444'},
+  '전략':  {emoji:'🧭',border:'#0EA5E9'},
+  '트렌드':{emoji:'📈',border:'#10B981'},
+  '비교':  {emoji:'⚖️',border:'#8B5CF6'},
+  '핵심':  {emoji:'💡',border:'#F59E0B'},
+  '요약':  {emoji:'📋',border:'#64748B'}
+};
+function getLabelStyle(label){
+  var keys=Object.keys(labelStyleMap);
+  for(var i=0;i<keys.length;i++){if(label.indexOf(keys[i])!==-1)return labelStyleMap[keys[i]];}
+  return{emoji:'✏️',border:'#94A3B8'};
+}
 function classify(t){
   var l=t.toLowerCase();
   if(l.indexOf('디파이너리')!==-1||l.indexOf('definery')!==-1||l.indexOf('crm')!==-1)return'디파이너리';
@@ -37,8 +61,8 @@ var panels=qs('#panels'),toolbar=qs('#editor-toolbar'),loading=qs('#loading');
 var genBtn=qs('#generate-btn'),urlList=qs('#url-list'),sidebar=qs('#sidebar');
 
 /* Sidebar */
-qs('#menu-btn').addEventListener('click',function(){sidebar.classList.toggle('open');});
-qs('#sidebar-toggle').addEventListener('click',function(){sidebar.classList.remove('open');});
+on('#menu-btn','click',function(){sidebar.classList.toggle('open');});
+on('#sidebar-toggle','click',function(){sidebar.classList.remove('open');});
 
 /* Sidebar tabs */
 qsa('.sidebar-tab').forEach(function(tab){
@@ -75,7 +99,7 @@ qsa('.sidebar-tab').forEach(function(tab){
 function getImgbbKey(){return localStorage.getItem('imgbb-api-key')||'17ad7af8657ecc93989b221c0698e893';}
 
 /* Settings */
-qs('#settings-toggle').addEventListener('click',function(){
+on('#settings-toggle','click',function(){
   /* 저장된 키 불러오기 */
   var gemKey=localStorage.getItem('gemini-api-key');
   var imgKey=localStorage.getItem('imgbb-api-key');
@@ -83,18 +107,32 @@ qs('#settings-toggle').addEventListener('click',function(){
   if(imgKey)qs('#imgbb-key-input').value=imgKey;
   qs('#settings-modal').classList.remove('hidden');
 });
-qs('#settings-close').addEventListener('click',function(){qs('#settings-modal').classList.add('hidden');});
+on('#settings-close','click',function(){qs('#settings-modal').classList.add('hidden');});
 
-/* Guide — 모드에 따라 다른 가이드 */
-qs('#guide-toggle').addEventListener('click',function(){
-  var mode=document.body.classList.contains('sns-mode')?'sns':'newsletter';
-  if(mode==='sns')qs('#sns-guide-modal').classList.remove('hidden');
-  else qs('#guide-modal').classList.remove('hidden');
+/* Guide — 통합 가이드 모달 (탭 전환) */
+function openGuideModal(tab){
+  var modal=qs('#guide-modal');
+  if(!modal)return;
+  // 탭 활성화
+  var targetTab=tab||(document.body.classList.contains('sns-mode')?'sns':'newsletter');
+  qsa('.guide-tab').forEach(function(b){b.classList.toggle('active',b.dataset.gtab===targetTab);});
+  qsa('.guide-tab-content').forEach(function(c){c.style.display=c.dataset.gtab===targetTab?'':'none';});
+  modal.classList.remove('hidden');
+}
+function closeGuideModal(){var m=qs('#guide-modal');if(m)m.classList.add('hidden');}
+
+on('#guide-toggle','click',function(){openGuideModal();});
+on('#guide-close','click',closeGuideModal);
+var gcTop=qs('#guide-close-top');if(gcTop)gcTop.addEventListener('click',closeGuideModal);
+
+/* 가이드 탭 전환 */
+qsa('.guide-tab').forEach(function(btn){
+  btn.addEventListener('click',function(){
+    var tab=btn.dataset.gtab;
+    qsa('.guide-tab').forEach(function(b){b.classList.toggle('active',b===btn);});
+    qsa('.guide-tab-content').forEach(function(c){c.style.display=c.dataset.gtab===tab?'':'none';});
+  });
 });
-qs('#guide-close').addEventListener('click',function(){qs('#guide-modal').classList.add('hidden');});
-var gcTop=qs('#guide-close-top');if(gcTop)gcTop.addEventListener('click',function(){qs('#guide-modal').classList.add('hidden');});
-qs('#sns-guide-close').addEventListener('click',function(){qs('#sns-guide-modal').classList.add('hidden');});
-var sgcTop=qs('#sns-guide-close-top');if(sgcTop)sgcTop.addEventListener('click',function(){qs('#sns-guide-modal').classList.add('hidden');});
 
 /* Home */
 function goHome(){
@@ -103,10 +141,10 @@ function goHome(){
   qs('#back-btn').classList.add('hidden');
   var tcdd=qs('#title-candidates-dropdown');if(tcdd)tcdd.classList.add('hidden');
   if(isEditable){isEditable=false;NL.contentEditable=false;NL.classList.remove('editable');qs('#edit-toggle').classList.remove('active');qs('#edit-toggle').innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit';var ep=qs('#edit-panel');if(ep)ep.classList.remove('open');qs('.main-content').classList.remove('ep-open');}
-  if(isComparing){isComparing=false;qs('#compare-toggle').classList.remove('active');qs('#original-panel').classList.add('hidden');qs('#panel-divider').classList.add('hidden');}
+  isComparing=false;
 }
-qs('#home-btn').addEventListener('click',goHome);
-qs('#back-btn').addEventListener('click',goHome);
+on('#home-btn','click',goHome);
+on('#back-btn','click',goHome);
 
 function showEditor(){
   panels.classList.remove('hidden');toolbar.classList.remove('hidden');
@@ -130,7 +168,7 @@ function makeUrlRow(){
     +'</div>';
   return d;
 }
-qs('#add-url-btn').addEventListener('click',function(){urlList.appendChild(makeUrlRow());});
+on('#add-url-btn','click',function(){urlList.appendChild(makeUrlRow());});
 urlList.addEventListener('click',function(e){if(e.target.classList.contains('url-remove-btn')&&urlList.querySelectorAll('.url-row').length>1)e.target.closest('.url-row').remove();});
 
 /* URL 드래그 순서 변경 */
@@ -325,7 +363,19 @@ function buildPrompt(volText){
   } else {
     g='[본문] 5~6개, 각 3~4문장. 원문 대비 50~60% 분량으로 압축.';
   }
-  return '너는 IGAWorks 뉴스레터 작성자야. 원문을 읽고 핵심만 뽑아서 리라이팅해.\n\n'
+  return '너는 IGAWorks 뉴스레터 작성자야.\n\n'
+    +'# 1단계: 원문 분석 (먼저 이걸 해)\n'
+    +'원문을 읽고 아래를 먼저 파악해:\n'
+    +'- 이 콘텐츠의 유형은? (데이터 분석 / 솔루션 소개 / 트렌드 리포트 / 케이스 스터디)\n'
+    +'- 독자(B2B 마케터)가 가장 관심 가질 핵심 수치 3개\n'
+    +'- 독자가 "오 이건 몰랐네" 할 만한 인사이트 2개\n\n'
+    +'# 2단계: 콘텐츠 유형별 톤\n'
+    +'- 데이터 분석: 수치를 전면에. "~로 나타났습니다", "~% 증가했습니다"\n'
+    +'- 솔루션 소개: 문제→해결 구조. "이런 고민이 있다면", "~로 해결할 수 있습니다"\n'
+    +'- 트렌드 리포트: 변화 강조. "~가 달라지고 있습니다", "주목할 점은"\n'
+    +'- 케이스 스터디: 성과 중심. "~를 달성했습니다", "비결은"\n\n'
+    +'# 3단계: 뉴스레터 작성\n'
+    +'1단계 분석을 기반으로 작성해.\n\n'
     +'# 규칙\n'
     +'- 원문에 없는 내용 창작 절대 금지. 원문 수치/사례만 사용.\n'
     +'- 원문 문장 그대로 복사 금지. 캐주얼하게 리라이팅.\n'
@@ -386,6 +436,18 @@ function buildProsePrompt(volText){
     g='원문 대비 50~60% 분량으로 압축. 큰 주제 3~5개를 ❶ ❷ ❸ 번호로 구분.';
   }
   return '너는 IGAWorks 뉴스레터 작성자야. 독자가 끝까지 읽고 싶게 만드는 글을 써.\n\n'
+    +'# 1단계: 원문 분석 (먼저 이걸 해)\n'
+    +'원문을 읽고 아래를 먼저 파악해:\n'
+    +'- 이 콘텐츠의 유형은? (데이터 분석 / 솔루션 소개 / 트렌드 리포트 / 케이스 스터디)\n'
+    +'- 독자(B2B 마케터)가 가장 관심 가질 핵심 수치 3개\n'
+    +'- 독자가 "오 이건 몰랐네" 할 만한 인사이트 2개\n\n'
+    +'# 2단계: 콘텐츠 유형별 톤\n'
+    +'- 데이터 분석: 수치를 전면에. "~로 나타났습니다", "~% 증가했습니다"\n'
+    +'- 솔루션 소개: 문제→해결 구조. "이런 고민이 있다면", "~로 해결할 수 있습니다"\n'
+    +'- 트렌드 리포트: 변화 강조. "~가 달라지고 있습니다", "주목할 점은"\n'
+    +'- 케이스 스터디: 성과 중심. "~를 달성했습니다", "비결은"\n\n'
+    +'# 3단계: 뉴스레터 작성\n'
+    +'1단계 분석을 기반으로 작성해.\n\n'
     +'# 톤 & 스타일\n'
     +'- ~습니다체 기반이지만 딱딱하지 않게.\n'
     +'- 독자에게 말을 거는 느낌. "과연 어떤 변화가 있었을까요?", "여기서 주목할 점은" 같은 표현 활용.\n'
@@ -395,49 +457,77 @@ function buildProsePrompt(volText){
     +'# 규칙\n'
     +'- 원문에 없는 내용 창작 절대 금지.\n'
     +'- 원문 문장 그대로 복사 금지.\n'
-    +'- 불릿/번호 절대 금지.\n'
-    +'- 이메일 발송 메타 정보 포함 금지.\n\n'
+    +'- 불릿/번호 절대 금지. ❶ ❷ ❸ 번호만 주제 전환 시 사용.\n'
+    +'- 이메일 발송 메타 정보 포함 금지.\n'
+    +'- ★ 각 문단은 5~7문장으로! 충분히 내용을 전개하되 너무 길어지지 않게.\n'
+    +'- ★ 수치를 한꺼번에 나열하지 마. 한 문단에 핵심 수치 1~2개만. 나머지는 다음 문단에서.\n\n'
     +'# 줄글 구조\n'
     +'- 소제목 없이 자연스러운 문단. 이모지 소제목:본문 형식 절대 금지!\n'
-    +'- 큰 주제 전환 시에만 ❶ ❷ ❸ 번호. 번호 뒤에 짧은 제목.\n'
-    +'- 앞쪽은 핵심 수치 구체적으로, 뒤쪽은 궁금증 남겨서 원문 유도.\n\n'
+    +'- 큰 주제 전환 시에만 ❶ ❷ ❸ 번호. 번호 뒤에 짧은 제목 (10자 이내).\n'
+    +'- 앞쪽은 핵심 수치 구체적으로, 뒤쪽은 궁금증 남겨서 원문 유도.\n'
+    +'- 문단과 문단 사이는 자연스러운 연결어로. "한편", "그런데 여기서 주목할 점이 있습니다", "반면" 등.\n\n'
     +'# 분량\n'+g+'\n\n'
-    +'# 출력 형식\n\n'
+    +'# 출력 형식 (★ 모든 태그 필수! 하나도 빠뜨리지 마!)\n\n'
     +'[제목] 후킹 제목 2줄. <br>로 구분. 이모지 1개.\n'
     +'[제목B] 데이터 강조형 2줄. 반드시 작성!\n'
     +'[제목C] 클릭 유도형 2줄. 반드시 작성!\n'
-    +'[소제목] 핵심 한 문장\n'
-    +'[도입] 2~3문장. 인사 넣지 마. 궁금증 자극하는 질문으로 시작.\n'
-    +'[본문] ❶ 짧은 제목\\n스토리텔링 문단.\n'
-    +'[강조] 핵심 인사이트 한 문장. 읽는 맛 있게. 40자 이내!\n'
-    +'[본문] ❷ 다음 주제.\\n앞과 자연스럽게 연결.\n'
-    +'[강조] 인사이트 한 문장. 40자 이내.\n'
-    +'[본문] ❸ 다음 주제.\n'
-    +'[강조] 인사이트 한 문장. 40자 이내.\n'
-    +'[본문] 마무리 2~3문장. 전체 메시지로 마무리.\n'
-    +'[인사이트] 궁금한 포인트 질문 3개. 각각 별도 줄!\n'
-    +'[유도] 1~2문장. 원문 클릭 유도.\n'
+    +'[소제목] 짧고 임팩트 있게! 15자 이내. 예: "증권 앱 MAU 역대 최고!", "팬덤이 곧 구매력이다"\n'
+    +'[도입] ★★★ 반드시 작성! ★★★ 2~3문장. 인사 넣지 마. 시장/업계 배경 → 이번에 분석한 이유 → 궁금증 유발 질문. 이 태그를 빼면 안 돼!\n'
+    +'[본문] ❶ 짧은 제목 (10자 이내)\n5~7문장 스토리텔링. 핵심 수치 1~2개. ★ 반드시 ❶부터 시작!\n'
+    +'[강조] 본문 내용에서 도출되는 시사점이나 인사이트 한 문장. 수치 나열이 아니라 "이것이 왜 중요한지" 해석하는 문장. 50자 이내. 예: "특정 이벤트가 얼마나 강력한 사용자 유입 효과를 가져올 수 있는지 명확히 보여줍니다", "팬덤의 충성도가 곧 구매력으로 이어진다는 것을 데이터가 증명합니다". 마케팅 전략이나 실무 시사점이 있을 때만 작성.\n'
+    +'[본문] ❷ 짧은 제목\n5~7문장. 앞과 자연스럽게 연결.\n'
+    +'[본문] ❸ 짧은 제목\n5~7문장.\n'
+    +'[본문] 마무리 2~3문장.\n'
+    +'[인사이트] ★ 뉴스레터에서 다루지 않은 원문의 궁금한 포인트를 질문 형태로 2~3개. 각각 별도 줄! 예:\n글로벌 아미의 모바일 기기 언어 설정 데이터에서 발견된 놀라운 점은?\n팬덤 깊이에 따라 어떤 메시지로 마케팅 캠페인을 진행해야 효과적일까요?\n트레이딩웍스360이 제안하는 BTS 팬덤 타겟 마케팅 시나리오 5가지는?\n'
+    +'[유도] 1~2문장. 원문 클릭 유도. 예: "BTS 팬덤 데이터가 가진 막강한 마케팅 잠재력을 더 깊이 파고들어보고 싶다면, 지금 바로 원문에서 상세한 분석과 전략을 확인해보세요!"\n'
     +'[한줄] 전체 관통 인사이트 1문장.\n'
     +'[통계] 임팩트 수치 1개 | 설명\n\n'
     +'★ 줄글 형식! 이모지 소제목 금지!\n'
-    +'★ [강조]는 각 주제 뒤 1개씩. 딱딱한 요약 말고 읽는 맛 있는 문장으로.';
+    +'★ [강조]는 각 주제 뒤 1개씩.\n'
+    +'★ [본문]은 반드시 ❶부터 순서대로! ❷부터 시작하면 안 돼!\n'
+    +'★ [도입]을 빼먹으면 안 돼! 반드시 작성!\n'
+    +'★ [인사이트]의 질문들은 반드시 줄바꿈(\\n)으로 분리!\n\n'
+    +'# 실제 완성 예시 (이 수준과 형식으로 써줘!)\n\n'
+    +'[제목] 💰 토스 vs 시중은행, 진짜 승자는?<br>금융 앱 전쟁의 숨겨진 데이터\n'
+    +'[제목B] 📊 KB금융 통합 MAU 1,851만 명!<br>토스와의 격차가 좁혀지고 있습니다\n'
+    +'[제목C] 🤔 토스가 정말 압도적 1위일까?<br>관점을 바꾸면 다른 그림이 보입니다\n'
+    +'[소제목] 토스 vs 금융그룹, 진짜 승부는 지금부터!\n'
+    +'[도입] 국내 금융 앱 1위는 늘 토스입니다. 하지만 보통 금융 앱 사용자는 은행, 카드, 증권 앱을 넘나들며 금융 생활을 하죠. 그런데 앱 하나하나를 따로 떼어놓고 숫자를 비교하는 게 정말 의미가 있을까요? 그래서 이번에는 관점을 완전히 바꿔봤습니다. 개별 앱이라는 틀을 벗어나, 각 시중은행의 계열사 앱들을 하나의 금융 그룹으로 묶어 토스와 정면으로 비교해 보았습니다. 과연 각 그룹의 계열사 앱들이 힘을 합치면 토스와의 격차를 얼마나 줄일 수 있을까요?\n'
+    +'[본문] ❶ 통합 MAU 비교\\n금융그룹의 영향력을 평가할 때, 개별 앱의 MAU만 볼 경우 실제 규모를 제대로 비교하기 어렵습니다. 금융 업종 사용자는 하나의 앱만 사용하기보다, 뱅킹에서 시작해 투자·카드·보험 등 여러 앱을 오가며 금융 활동을 이어가기 때문입니다. 따라서 여러 계열 앱을 보유한 금융그룹의 경우, 중복 사용자를 제거한 그룹별 통합 MAU로 보는 것이 보다 정확한 기준이 됩니다. 통합 MAU 관점에서 바라본 각 그룹의 사용자 기반은 토스와 충분히 경쟁할 수 있는 수준으로 나타났습니다. 특히 <strong>KB금융그룹</strong>은 2025년 1월 1,725만 명에서 2026년 1월 <strong>1,851만 명</strong>으로 확대되며 시중 금융그룹 중 토스(2,094만 명)의 체급에 가장 바짝 다가선 것을 확인할 수 있습니다.\n'
+    +'[강조] 통합 MAU로 보면, 금융그룹과 토스의 격차는 생각보다 가깝습니다\n'
+    +'[본문] ❷ 교차 사용률 비교\\n그런데 여기서 주목할 점이 있습니다. 각 금융그룹 사용자 중 토스를 함께 사용하는 비율이 상당히 높았습니다. 이는 토스가 단순한 경쟁자가 아니라 금융 생활의 보조 도구로 자리잡았음을 시사합니다. 반면 토스 사용자 중 시중은행 앱을 함께 쓰는 비율은 상대적으로 낮아, 토스 중심의 금융 생활이 점점 굳어지고 있는 모습입니다. 체류시간 점유율에서도 토스의 압도적 우위가 확인되었습니다.\n'
+    +'[본문] ❸ 전략적 요충지\\n그렇다면 시중 금융그룹이 토스와의 격차를 좁히려면 어디에 집중해야 할까요? 데이터는 명확한 답을 보여줍니다. 2030 세대의 금융 앱 사용 패턴에서 토스 의존도가 가장 높게 나타났고, 이 세대를 잡는 것이 향후 금융 시장의 판도를 결정할 핵심 변수가 될 것으로 보입니다.\n'
+    +'[강조] 2030 세대를 잡는 금융그룹이 토스의 대항마가 됩니다\n'
+    +'[본문] 금융 앱 시장의 경쟁은 단순한 MAU 싸움이 아닙니다. 사용자가 어떤 맥락에서, 얼마나 오래, 어떤 조합으로 앱을 사용하는지를 입체적으로 들여다봐야 진짜 경쟁력이 보입니다.\n'
+    +'[인사이트] 각 금융그룹의 MZ 세대 공략 전략은 어떤 성과를 내고 있을까요?\\n체류시간 점유율에서 토스를 위협하는 금융그룹은 어디일까요?\\n금융그룹 간 교차 사용 패턴에서 발견되는 의외의 조합은?\n'
+    +'[유도] 금융 앱 시장의 숨겨진 경쟁 구도가 궁금하다면, 지금 바로 원문에서 상세한 분석과 전략을 확인해보세요!\n'
+    +'[한줄] 개별 앱이 아닌 금융그룹으로 보면, 토스와의 격차는 생각보다 가깝습니다\n'
+    +'[통계] 통합 MAU 1,851만 명 | KB금융그룹의 2026년 1월 그룹별 통합 사용자 수\n\n'
+    +'★ 위 예시는 참고용이야. 원문 내용에 맞게 동일한 수준과 형식으로 새로 써줘!';
 }
 
-function aiRewrite(paras,title,volumeText,writeStyle){
+
+function aiRewrite(paras,title,volumeText,writeStyle,url){
   var key=getKey();if(!key)return Promise.reject(new Error('NO_KEY'));
   localStorage.setItem('gemini-api-key',key);
-  var orig=paras.map(function(p){return(p.isH?'## ':'')+p.text;}).join('\n\n');
-  if(orig.length>15000)orig=orig.substring(0,15000)+'\n\n[... 원문 일부 생략 ...]';
   var sysPrompt=(writeStyle==='prose')?buildProsePrompt(volumeText):buildPrompt(volumeText);
   var volInstruction=volumeText?'\n\n★★★ 분량 지시: '+volumeText+'. 이 분량을 반드시 지켜주세요! 기본 규칙보다 이 분량이 우선입니다. ★★★':'';
-  var userMsg='원문 제목: '+title+'\n\n원문:\n'+orig+'\n\n★ 앞쪽 본문에서 핵심 수치를 구체적으로 언급하고, 뒤쪽으로 갈수록 궁금증을 남겨서 원문 클릭을 유도하세요.'+volInstruction;
+  /* URL이 있으면 Gemini가 직접 읽도록 URL만 전달, 없으면 파싱 텍스트 fallback */
+  var userMsg=url
+    ?'다음 URL의 원문을 직접 읽고 뉴스레터를 작성해주세요.\nURL: '+url+'\n\n★ 앞쪽 본문에서 핵심 수치를 구체적으로 언급하고, 뒤쪽으로 갈수록 궁금증을 남겨서 원문 클릭을 유도하세요.'+volInstruction
+    :(function(){
+        var orig=paras.map(function(p){return(p.isH?'## ':'')+p.text;}).join('\n\n');
+        if(orig.length>15000)orig=orig.substring(0,15000)+'\n\n[... 원문 일부 생략 ...]';
+        return '원문 제목: '+title+'\n\n원문:\n'+orig+'\n\n★ 앞쪽 본문에서 핵심 수치를 구체적으로 언급하고, 뒤쪽으로 갈수록 궁금증을 남겨서 원문 클릭을 유도하세요.'+volInstruction;
+      })();
   /* 모델별로 body를 만들어서 시도 — system_instruction 지원 여부에 따라 분기 */
   var models=['gemini-2.5-flash'];
+  var urlTools=url?[{"urlContext":{}}]:[];
   function makeBody(useSystemInstruction){
     if(useSystemInstruction){
-      return JSON.stringify({system_instruction:{parts:[{text:sysPrompt}]},contents:[{parts:[{text:userMsg}]}],generationConfig:{temperature:0.4,maxOutputTokens:32768}});
+      return JSON.stringify({system_instruction:{parts:[{text:sysPrompt}]},contents:[{parts:[{text:userMsg}]}],generationConfig:{temperature:0.7,maxOutputTokens:32768},tools:urlTools});
     } else {
-      return JSON.stringify({contents:[{parts:[{text:sysPrompt+'\n\n---\n\n'+userMsg}]}],generationConfig:{temperature:0.4,maxOutputTokens:32768}});
+      return JSON.stringify({contents:[{parts:[{text:sysPrompt+'\n\n---\n\n'+userMsg}]}],generationConfig:{temperature:0.7,maxOutputTokens:32768},tools:urlTools});
     }
   }
   function tryM(i,triedWithoutSys){
@@ -505,7 +595,19 @@ function parseAI(text,title){
     else if(t.indexOf('[제목B]')===0){r.titleB=t.replace('[제목B]','').trim();lastTag='제목B';}
     else if(t.indexOf('[제목]')===0){r.title=t.replace('[제목]','').trim();lastTag='제목';}
     else if(t.indexOf('[소제목]')===0){r.subtitle=t.replace('[소제목]','').trim();lastTag='소제목';}
-    else if(t.indexOf('[도입]')===0){r.intro+=(r.intro?'\n':'')+t.replace('[도입]','').trim();lastTag='도입';}
+    else if(t.indexOf('[도입]')===0){
+      var introText=t.replace('[도입]','').trim();
+      /* ❶이 도입에 섞여있으면 분리 */
+      var circleInIntro=introText.search(/[❶❷❸❹❺❻❼❽❾❿\u2776-\u277F\u2460-\u2473]/);
+      if(circleInIntro>0){
+        r.intro+=(r.intro?'\n':'')+introText.substring(0,circleInIntro).trim();
+        r.body.push(introText.substring(circleInIntro).trim());
+        lastTag='본문';
+      } else {
+        r.intro+=(r.intro?'\n':'')+introText;
+        lastTag='도입';
+      }
+    }
     else if(t.indexOf('[본문]')===0){
       var btext=t.replace('[본문]','').trim();
       r.body.push(btext);
@@ -681,7 +783,7 @@ function buildNL(sections){
           var hlText=bodyText.replace('__HIGHLIGHT__','').trim();
           var hlPlain=hlText.replace(/<[^>]+>/g,'');
           if(hlPlain.length<=80){
-            S+='<div data-src-idx="s'+si+'b'+bi+'" data-el="box" style="background:#FBFBFF;padding:18px 22px;border-radius:0 10px 10px 0;margin:16px 0;border:1px solid #E5E7EB;border-left:3px solid #6366F1;color:#222;font-size:16px;line-height:1.8;font-weight:400;'+ff+'">'+hlText.replace(/<\/?strong>/g,'')+'</div>';
+            S+='<div data-src-idx="s'+si+'b'+bi+'" data-el="box" style="background:linear-gradient(135deg,#F8F7FF 0%,#F0EEFF 100%);padding:12px 18px 12px 16px;border-radius:10px;margin:14px 0;border:1px solid #E0DEFF;color:#3B48CC;font-size:14px;line-height:1.7;font-weight:600;display:flex;align-items:flex-start;gap:8px;'+ff+'"><span style="font-size:16px;flex-shrink:0">💡</span><span>'+hlText.replace(/<\/?strong>/g,'')+'</span></div>';
           } else {
             S+='<p data-src-idx="s'+si+'b'+bi+'" style="color:#222;margin:0 0 20px;font-size:16px;line-height:1.8;font-weight:400">'+hlText.replace(/<\/?strong>/g,'')+'</p>';
           }
@@ -795,17 +897,18 @@ function buildNL(sections){
     if(ai.insightBox){
       if(isProse){
         /* 줄글형: 유도 + 인사이트를 하나로 합침 */
-        S+='<div data-el="box" contenteditable="inherit" style="background:#FBFBFF;border:1px solid #E5E7EB;padding:20px 24px;border-radius:10px;margin:20px 0;color:#222;'+ff+'">';
+        S+='<div data-el="box" contenteditable="inherit" style="background:linear-gradient(135deg,#F8F7FF 0%,#F0EEFF 100%);border:1px solid #E0DEFF;padding:20px 24px;border-radius:12px;margin:20px 0;color:#222;'+ff+'">';
         /* 제목 */
-        S+='<div style="font-size:16px;font-weight:700;color:#111;margin-bottom:14px">리포트 본문에서 직접 확인해 보세요!</div>';
+        S+='<div style="font-size:16px;font-weight:700;color:#3B48CC;margin-bottom:14px">📎 더 자세히 알아보기</div>';
         /* 불릿 질문 */
         var insightRaw=ai.insightBox.replace(/🤔\s*/g,'').replace(/리포트\s*본문에서\s*직접\s*확인[^•\n]*/gi,'').trim();
         var redirectText=(ai.redirect||'').replace(/<\/?strong>/g,'').replace(/리포트\s*본문에서[^.]*[.!]?\s*/gi,'').trim();
-        var insightLines=insightRaw.split(/[•·\n]/).filter(function(l){return l.trim().length>5&&!/리포트.*본문|확인.*보세요/i.test(l);});
+        /* * · • \n 또는 ? 뒤 공백으로 분리 */
+        var insightLines=insightRaw.split(/[•·*\n]|(?<=\?)\s+/).filter(function(l){return l.trim().length>5&&!/리포트.*본문|확인.*보세요/i.test(l);});
         if(insightLines.length>0){
           for(var il=0;il<insightLines.length;il++){
             var iLine=insightLines[il].trim().replace(/^[•·\-]\s*/,'');
-            S+='<div style="margin-bottom:10px;font-size:15px;line-height:1.7;padding-left:16px;position:relative"><span style="position:absolute;left:0;color:#94A3B8">-</span>'+iLine+'</div>';
+            S+='<div style="margin-bottom:10px;font-size:15px;line-height:1.7;padding-left:20px;position:relative"><span style="position:absolute;left:0;color:#111;font-size:16px">•</span>'+iLine+'</div>';
           }
         }
         /* 마무리 문장 */
@@ -813,7 +916,7 @@ function buildNL(sections){
           S+='<div style="font-size:15px;line-height:1.7;margin-top:14px;color:#475569">'+redirectText+'</div>';
         }
         var origLink=secTrackLink||sec.url;
-        S+='<div style="margin-top:16px;text-align:right"><a href="'+esc(origLink)+'" target="_blank" style="font-size:16px;color:#3B48CC;text-decoration:none;font-weight:600">&#128206; 원문 보기 →</a></div>';
+        S+='<div style="margin-top:16px;text-align:right"><a href="'+esc(origLink)+'" target="_blank" style="font-size:16px;color:#3B48CC;text-decoration:none;font-weight:600">확인하기 →</a></div>';
         S+='</div>';
       } else {
         /* 소제목형: 기존 스타일 */
@@ -942,18 +1045,9 @@ function setupHL(){
   });
 }
 
-/* ===== Compare & Edit ===== */
+/* ===== Edit ===== */
 var hasOrigData=false;
-qs('#compare-toggle').addEventListener('click',function(){
-  if(!hasOrigData){toast('원본 대조는 새로 생성한 뉴스레터에서만 가능합니다');return;}
-  /* 편집 모드 해제 */
-  if(isEditable){isEditable=false;NL.contentEditable=false;NL.classList.remove('editable');qs('#edit-toggle').classList.remove('active');qs('#edit-toggle').innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit';qs('#edit-panel').classList.remove('open');}
-  isComparing=!isComparing;this.classList.toggle('active',isComparing);
-  qs('#original-panel').classList.toggle('hidden',!isComparing);
-  qs('#panel-divider').classList.toggle('hidden',!isComparing);
-  if(!isComparing)clearHL();
-});
-qs('#edit-toggle').addEventListener('click',function(){
+on('#edit-toggle','click',function(){
   isEditable=!isEditable;NL.contentEditable=isEditable;
   NL.classList.toggle('editable',isEditable);this.classList.toggle('active',isEditable);
   this.innerHTML=isEditable?'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> 편집 완료':'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit';
@@ -962,7 +1056,7 @@ qs('#edit-toggle').addEventListener('click',function(){
   if(isEditable){clearHL();syncToolbar();}
 });
 /* 도구 패널 X 닫기 */
-qs('#ep-close').addEventListener('click',function(){
+on('#ep-close','click',function(){
   isEditable=false;NL.contentEditable=false;
   NL.classList.remove('editable');qs('#edit-toggle').classList.remove('active');
   qs('#edit-toggle').innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit';
@@ -1029,14 +1123,14 @@ function stibeeHTML(){
   if(sizeKB>90)toast('⚠️ HTML '+sizeKB+'KB — Gmail은 102KB 넘으면 잘려요!');
   return'<div style="font-family:Noto Sans KR,Pretendard,Apple SD Gothic Neo,sans-serif;letter-spacing:'+nlLS+';line-height:'+nlLH+';font-size:'+nlFS+';color:'+nlColor+';max-width:600px;margin:0 auto;background:#fff;padding:40px 24px;width:100%;box-sizing:border-box">'+inner+'</div>';
 }
-qs('#copy-html-btn').addEventListener('click',function(){
+on('#copy-html-btn','click',function(){
   var html=stibeeHTML();
   if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(html).then(function(){toast('HTML 복사됨!');});
   else{var ta=document.createElement('textarea');ta.value=html;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('HTML 복사됨!');}
 });
 
 /* ===== 스티비로 보내기 (HTML 복사 + 새 탭) ===== */
-qs('#stibee-upload-btn').addEventListener('click',function(){
+on('#stibee-upload-btn','click',function(){
   var html=stibeeHTML();
   if(navigator.clipboard&&navigator.clipboard.writeText){
     navigator.clipboard.writeText(html).then(function(){
@@ -1047,12 +1141,12 @@ qs('#stibee-upload-btn').addEventListener('click',function(){
     qs('#stibee-modal').classList.remove('hidden');
   }
 });
-qs('#stibee-open').addEventListener('click',function(){
+on('#stibee-open','click',function(){
   window.open('https://stibee.com/app/emails/new','_blank');
   qs('#stibee-modal').classList.add('hidden');
   toast('스티비에서 HTML 상자에 붙여넣기 하세요');
 });
-qs('#stibee-close').addEventListener('click',function(){qs('#stibee-modal').classList.add('hidden');});
+on('#stibee-close','click',function(){qs('#stibee-modal').classList.add('hidden');});
 
 /* ===== Undo ===== */
 var undoStack=[];
@@ -1061,14 +1155,43 @@ function saveUndo(){undoStack.push(NL.innerHTML);if(undoStack.length>30)undoStac
 var undoTimer=null;
 NL.addEventListener('input',function(){clearTimeout(undoTimer);undoTimer=setTimeout(saveUndo,800);});
 
+/* ===== 뉴스레터 줌 컨트롤 ===== */
+(function(){
+  var zoomLevels=[60,75,90,100];
+  var zoomIdx=3; // 기본 100%
+  function applyZoom(){
+    var z=zoomLevels[zoomIdx];
+    var NLout=qs('#newsletter-output');
+    if(NLout){NLout.style.transform='scale('+z/100+')';NLout.style.marginBottom=-(100-z)*6.8+'px';}
+    var lbl=qs('#zoom-label');
+    if(lbl)lbl.textContent=z+'%';
+  }
+  qs('#zoom-in-btn').addEventListener('click',function(){if(zoomIdx<zoomLevels.length-1){zoomIdx++;applyZoom();}});
+  qs('#zoom-out-btn').addEventListener('click',function(){if(zoomIdx>0){zoomIdx--;applyZoom();}});
+})();
+
 /* ===== Email Preview ===== */
-qs('#preview-btn').addEventListener('click',function(){
+on('#preview-btn','click',function(){
   var html=stibeeHTML();
   var frame=qs('#preview-frame');
   frame.innerHTML=html;
   qs('#preview-modal').classList.remove('hidden');
 });
-qs('#preview-close').addEventListener('click',function(){qs('#preview-modal').classList.add('hidden');});
+on('#preview-close','click',function(){qs('#preview-modal').classList.add('hidden');});
+
+/* ===== 원본 대조 토글 ===== */
+on('#compare-toggle','click',function(){
+  if(!hasOrigData){toast('최신 생성 뉴스레터에만 가능합니다');return;}
+  isComparing=!isComparing;
+  var op=qs('#original-panel'),dv=qs('#panel-divider'),btn=qs('#compare-toggle');
+  if(isComparing){
+    op.classList.remove('hidden');dv.classList.remove('hidden');
+    btn.classList.add('active');
+  } else {
+    op.classList.add('hidden');dv.classList.add('hidden');
+    btn.classList.remove('active');
+  }
+});
 
 /* ===== Drafts (임시저장) ===== */
 function getDrafts(){try{return JSON.parse(localStorage.getItem('nl-drafts')||'[]');}catch(e){return[];}}
@@ -1078,11 +1201,11 @@ function renderDrafts(){
   var drafts=getDrafts();
   if(!drafts.length){dl.innerHTML='<p class="history-empty">임시저장된 뉴스레터가 없습니다.</p>';return;}
   dl.innerHTML=drafts.map(function(d,i){
-    return'<div class="history-item" data-di="'+i+'"><div style="display:flex;justify-content:space-between;align-items:start"><div class="hi-title">'+esc(d.name)+'</div><button class="draft-del" data-dd="'+i+'" style="background:none;border:none;color:#ccc;cursor:pointer;font-size:14px;padding:0 2px;flex-shrink:0">✕</button></div><div class="hi-date">'+d.date+'</div><span class="hi-tag">임시저장</span></div>';
+    return'<div class="history-item" data-di="'+i+'"><div style="display:flex;justify-content:space-between;align-items:start"><div class="hi-title">'+esc(d.name)+'</div><button class="draft-del" data-dd="'+i+'" style="background:none;border:none;color:#ccc;cursor:pointer;font-size:14px;padding:0 2px;flex-shrink:0">✕</button></div><div class="hi-date">'+d.date+'</div><span class="hi-tag" style="background:#6366F1">임시저장</span></div>';
   }).join('');
 }
 var currentDraftName=null;
-qs('#save-draft-btn').addEventListener('click',function(){
+on('#save-draft-btn','click',function(){
   var name=currentDraftName||prompt('임시저장 이름:');
   if(!name)return;
   var drafts=getDrafts();
@@ -1094,7 +1217,7 @@ qs('#save-draft-btn').addEventListener('click',function(){
   currentDraftName=name;
   saveDrafts(drafts);renderDrafts();toast('임시저장 완료: '+name);
 });
-qs('#drafts-list').addEventListener('click',function(e){
+on('#drafts-list','click',function(e){
   var del=e.target.closest('.draft-del');
   if(del){e.stopPropagation();var drafts=getDrafts();var delName=drafts[+del.dataset.dd]&&drafts[+del.dataset.dd].name;drafts.splice(+del.dataset.dd,1);saveDrafts(drafts);renderDrafts();if(currentDraftName===delName)currentDraftName=null;toast('임시저장 삭제됨');return;}
   var item=e.target.closest('[data-di]');
@@ -1127,8 +1250,8 @@ qsa('.ep-fmt[data-cmd]').forEach(function(btn){
     document.execCommand(cmd,false,null);
   });
 });
-qs('#font-family').addEventListener('change',function(e){if(isEditable)document.execCommand('fontName',false,e.target.value);});
-qs('#font-size').addEventListener('change',function(e){
+on('#font-family','change',function(e){if(isEditable)document.execCommand('fontName',false,e.target.value);});
+on('#font-size','change',function(e){
   if(!isEditable)return;
   var size=e.target.value+'px';
   var sel=window.getSelection();if(!sel.rangeCount)return;
@@ -1179,7 +1302,7 @@ document.addEventListener('selectionchange',function(){
   }
 });
 
-qs('#font-color').addEventListener('input',function(e){
+on('#font-color','input',function(e){
   if(!isEditable)return;
   var color=e.target.value;
   qs('#font-color-hex').value=color;
@@ -1192,13 +1315,13 @@ qs('#font-color').addEventListener('input',function(e){
     if(sel.rangeCount>0)colorSavedRange=sel.getRangeAt(0).cloneRange();
   }
 });
-qs('#font-color-hex').addEventListener('change',function(e){
+on('#font-color-hex','change',function(e){
   var v=e.target.value.trim();
   if(v&&v.charAt(0)!=='#')v='#'+v;
   if(/^#[0-9A-Fa-f]{6}$/.test(v)){qs('#font-color').value=v;qs('#font-color').dispatchEvent(new Event('input'));}
 });
 /* 배경색 */
-qs('#bg-color').addEventListener('input',function(e){
+on('#bg-color','input',function(e){
   if(!isEditable)return;
   var bg=e.target.value;
   qs('#bg-color-hex').value=bg;
@@ -1208,12 +1331,12 @@ qs('#bg-color').addEventListener('input',function(e){
   document.execCommand('hiliteColor',false,bg);
   if(sel.rangeCount>0)colorSavedRange=sel.getRangeAt(0).cloneRange();
 });
-qs('#bg-color-hex').addEventListener('change',function(e){
+on('#bg-color-hex','change',function(e){
   var v=e.target.value.trim();
   if(v&&v.charAt(0)!=='#')v='#'+v;
   if(/^#[0-9A-Fa-f]{6}$/.test(v)){qs('#bg-color').value=v;qs('#bg-color').dispatchEvent(new Event('input'));}
 });
-qs('#line-height-select').addEventListener('change',function(e){
+on('#line-height-select','change',function(e){
   if(!isEditable)return;
   var val=e.target.value;
   var sel=window.getSelection();
@@ -1232,7 +1355,7 @@ qs('#line-height-select').addEventListener('change',function(e){
     else NL.style.lineHeight=val;
   }
 });
-qs('#letter-spacing-select').addEventListener('change',function(e){
+on('#letter-spacing-select','change',function(e){
   if(!isEditable)return;
   var val=e.target.value;
   var sel=window.getSelection();
@@ -1275,16 +1398,16 @@ document.querySelectorAll('[data-insert-type]').forEach(function(btn){
 });
 /* Spacer */
 var editingSpacer=null;
-qs('#spacer-cancel').addEventListener('click',function(){qs('#spacer-modal').classList.add('hidden');editingSpacer=null;});
-qs('#spacer-delete').addEventListener('click',function(){if(editingSpacer){editingSpacer.remove();editingSpacer=null;}qs('#spacer-modal').classList.add('hidden');toast('공백 삭제됨');});
-qs('#spacer-confirm').addEventListener('click',function(){
+on('#spacer-cancel','click',function(){qs('#spacer-modal').classList.add('hidden');editingSpacer=null;});
+on('#spacer-delete','click',function(){if(editingSpacer){editingSpacer.remove();editingSpacer=null;}qs('#spacer-modal').classList.add('hidden');toast('공백 삭제됨');});
+on('#spacer-confirm','click',function(){
   var h=parseInt(qs('#spacer-height').value)||32;
   if(editingSpacer){editingSpacer.style.height=h+'px';}
   else{restoreSelection();document.execCommand('insertHTML',false,'<div data-el="spacer" style="height:'+h+'px;line-height:0;font-size:0">&nbsp;</div>');}
   qs('#spacer-modal').classList.add('hidden');editingSpacer=null;NL.focus();
 });
 /* Spacer 슬라이더 실시간 반영 */
-qs('#spacer-height').addEventListener('input',function(e){
+on('#spacer-height','input',function(e){
   var v=e.target.value;
   qs('#spacer-height-val').textContent=v;
   if(editingSpacer)editingSpacer.style.height=v+'px';
@@ -1414,9 +1537,9 @@ qs('#spacer-height').addEventListener('input',function(e){
 var savedRange=null;
 function saveSelection(){var sel=window.getSelection();if(sel.rangeCount>0)savedRange=sel.getRangeAt(0).cloneRange();else savedRange=null;}
 function restoreSelection(){if(!savedRange)return;var sel=window.getSelection();sel.removeAllRanges();sel.addRange(savedRange);}
-qs('#insert-link-btn').addEventListener('click',function(){if(!isEditable)return;var sel=window.getSelection();saveSelection();qs('#link-text').value=sel.toString()||'';qs('#link-url').value='';qs('#link-modal').classList.remove('hidden');});
-qs('#link-cancel').addEventListener('click',function(){qs('#link-modal').classList.add('hidden');});
-qs('#link-confirm').addEventListener('click',function(){
+on('#insert-link-btn','click',function(){if(!isEditable)return;var sel=window.getSelection();saveSelection();qs('#link-text').value=sel.toString()||'';qs('#link-url').value='';qs('#link-modal').classList.remove('hidden');});
+on('#link-cancel','click',function(){qs('#link-modal').classList.add('hidden');});
+on('#link-confirm','click',function(){
   var text=qs('#link-text').value.trim()||'링크',url=qs('#link-url').value.trim();
   if(!url){toast('URL을 입력해주세요.');return;}
   restoreSelection();
@@ -1432,14 +1555,14 @@ function getTrackUrlForElement(el){
   var sec=el.closest('[data-section]');
   return sec?sec.getAttribute('data-track-url')||'':'';
 }
-qs('#insert-img-btn').addEventListener('click',function(){
+on('#insert-img-btn','click',function(){
   if(!isEditable)return;
   ensureCursorInNL();
   var ph='<div data-el="img-placeholder" style="background:#F1F5F9;border:2px dashed #CBD5E1;border-radius:12px;padding:32px 16px;text-align:center;cursor:pointer;margin:12px 0"><div style="font-size:24px;color:#94A3B8;margin-bottom:6px">&#128444;</div><div style="font-size:12px;color:#94A3B8">클릭해서 이미지 추가</div></div>';
   document.execCommand('insertHTML',false,ph);
   NL.focus();
 });
-qs('#img-file-btn').addEventListener('click',function(){imgFileInput.click();});
+on('#img-file-btn','click',function(){imgFileInput.click();});
 imgFileInput.addEventListener('change',function(e){
   var file=e.target.files[0];if(!file)return;
   /* 미리보기용 base64 먼저 표시 */
@@ -1483,9 +1606,9 @@ imgFileInput.addEventListener('change',function(e){
   };
   reader.readAsDataURL(file);imgFileInput.value='';
 });
-qs('#img-url').addEventListener('input',function(e){var v=e.target.value.trim();if(v){qs('#img-preview').src=v;qs('#img-preview-wrap').classList.remove('hidden');}else qs('#img-preview-wrap').classList.add('hidden');});
-qs('#img-cancel').addEventListener('click',function(){qs('#img-modal').classList.add('hidden');editingImg=null;window._imgPlaceholder=null;});
-qs('#img-delete').addEventListener('click',function(){
+on('#img-url','input',function(e){var v=e.target.value.trim();if(v){qs('#img-preview').src=v;qs('#img-preview-wrap').classList.remove('hidden');}else qs('#img-preview-wrap').classList.add('hidden');});
+on('#img-cancel','click',function(){qs('#img-modal').classList.add('hidden');editingImg=null;window._imgPlaceholder=null;});
+on('#img-delete','click',function(){
   if(editingImg){
     var parent=editingImg.parentNode;
     if(editingImg.tagName==='A'&&editingImg.querySelector('img')){editingImg.remove();}
@@ -1496,7 +1619,7 @@ qs('#img-delete').addEventListener('click',function(){
   if(window._imgPlaceholder){window._imgPlaceholder.remove();window._imgPlaceholder=null;}
   qs('#img-modal').classList.add('hidden');toast('이미지 삭제됨');
 });
-qs('#img-confirm').addEventListener('click',function(){
+on('#img-confirm','click',function(){
   var src=qs('#img-url').value.trim();if(!src){toast('이미지 URL 또는 파일을 선택해주세요.');return;}
   var alt=qs('#img-alt').value.trim(),w=qs('#img-width').value.trim()||'100%',link=qs('#img-link').value.trim();
   /* 테두리 조합 */
@@ -1507,6 +1630,17 @@ qs('#img-confirm').addEventListener('click',function(){
   var borderCSS=border?'border:'+border+';':'';
   var isInline=(w!=='100%'&&w.indexOf('100%')===-1);
   var displayStyle=isInline?'display:inline-block;vertical-align:top;':'display:block;';
+  /* 링크가 비어있으면 해당 섹션의 트래킹 링크 자동 적용 */
+  if(!link){
+    var cursor=editingImg||window._imgPlaceholder;
+    if(cursor){
+      var sec=cursor.closest('[data-section]');
+      if(sec){
+        var trackUrl=sec.getAttribute('data-track-url');
+        if(trackUrl)link=trackUrl;
+      }
+    }
+  }
   if(editingImg){
     var actualImg=editingImg.tagName==='IMG'?editingImg:editingImg.querySelector('img');
     if(actualImg){actualImg.src=src;actualImg.alt=alt;actualImg.style.width=w;actualImg.style.border=border||'none';actualImg.style.display=isInline?'inline-block':'block';if(isInline)actualImg.style.verticalAlign='top';}
@@ -1542,7 +1676,7 @@ qsa('.img-layout-btn').forEach(function(btn){
 });
 
 /* 이미지 2단 배열 삽입 */
-qs('#insert-img-row-btn').addEventListener('click',function(){
+on('#insert-img-row-btn','click',function(){
   if(!isEditable)return;
   var ph='<div data-el="img-placeholder" style="background:#F1F5F9;border:2px dashed #CBD5E1;border-radius:12px;padding:32px 16px;text-align:center;cursor:pointer"><div style="font-size:24px;color:#94A3B8;margin-bottom:4px">&#128444;</div><div style="font-size:11px;color:#94A3B8">클릭해서 이미지 추가</div></div>';
   var html='<div style="margin:16px 0;display:flex;gap:8px">'
@@ -1555,10 +1689,10 @@ qs('#insert-img-row-btn').addEventListener('click',function(){
 });
 
 /* Button Modal */
-qs('#insert-btn-btn').addEventListener('click',function(){if(!isEditable)return;saveSelection();editingBtn=null;qs('#btn-text').value='블로그 아티클 바로가기';qs('#btn-url').value='';qs('#btn-bg').value='#ffffff';qs('#btn-fg').value='#4F46E5';qs('#btn-border-color').value='#4F46E5';qs('#btn-size').value='md';qs('#btn-radius').value='8px';qs('#btn-width').value='auto';qs('#btn-modal').classList.remove('hidden');});
-qs('#btn-cancel').addEventListener('click',function(){qs('#btn-modal').classList.add('hidden');editingBtn=null;});
-qs('#btn-delete').addEventListener('click',function(){if(editingBtn){editingBtn.remove();editingBtn=null;}qs('#btn-modal').classList.add('hidden');toast('버튼 삭제됨');});
-qs('#btn-confirm').addEventListener('click',function(){
+on('#insert-btn-btn','click',function(){if(!isEditable)return;saveSelection();editingBtn=null;qs('#btn-text').value='블로그 아티클 바로가기';qs('#btn-url').value='';qs('#btn-bg').value='#ffffff';qs('#btn-fg').value='#4F46E5';qs('#btn-border-color').value='#4F46E5';qs('#btn-size').value='md';qs('#btn-radius').value='8px';qs('#btn-width').value='auto';qs('#btn-modal').classList.remove('hidden');});
+on('#btn-cancel','click',function(){qs('#btn-modal').classList.add('hidden');editingBtn=null;});
+on('#btn-delete','click',function(){if(editingBtn){editingBtn.remove();editingBtn=null;}qs('#btn-modal').classList.add('hidden');toast('버튼 삭제됨');});
+on('#btn-confirm','click',function(){
   var text=qs('#btn-text').value.trim()||'바로가기',url=qs('#btn-url').value.trim()||'#';
   var bg=qs('#btn-bg').value,fg=qs('#btn-fg').value,bc=qs('#btn-border-color').value;
   var radius=qs('#btn-radius').value;
@@ -1588,8 +1722,8 @@ qsa('.pos-btn').forEach(function(btn){btn.addEventListener('click',function(){
 });});
 
 /* Box Modal */
-qs('#box-cancel').addEventListener('click',function(){qs('#box-modal').classList.add('hidden');editingBox=null;});
-qs('#box-delete').addEventListener('click',function(){
+on('#box-cancel','click',function(){qs('#box-modal').classList.add('hidden');editingBox=null;});
+on('#box-delete','click',function(){
   if(editingBox){
     var parentA=editingBox.parentNode&&editingBox.parentNode.tagName==='A'&&editingBox.parentNode.getAttribute('data-box-link')?editingBox.parentNode:null;
     if(parentA)parentA.remove();else editingBox.remove();
@@ -1597,7 +1731,7 @@ qs('#box-delete').addEventListener('click',function(){
   }
   qs('#box-modal').classList.add('hidden');toast('박스 삭제됨');
 });
-qs('#box-confirm').addEventListener('click',function(){
+on('#box-confirm','click',function(){
   if(editingBox){
     editingBox.style.backgroundColor=qs('#box-bg-edit').value;
     editingBox.style.borderLeftColor=qs('#box-border-edit').value;
@@ -1620,12 +1754,12 @@ qs('#box-confirm').addEventListener('click',function(){
 });
 
 /* HR Modal */
-qs('#hr-cancel').addEventListener('click',function(){qs('#hr-modal').classList.add('hidden');clickedHr=null;});
-qs('#hr-delete').addEventListener('click',function(){
+on('#hr-cancel','click',function(){qs('#hr-modal').classList.add('hidden');clickedHr=null;});
+on('#hr-delete','click',function(){
   if(clickedHr){clickedHr.remove();clickedHr=null;}
   qs('#hr-modal').classList.add('hidden');toast('구분선 삭제됨');
 });
-qs('#hr-confirm').addEventListener('click',function(){
+on('#hr-confirm','click',function(){
   if(clickedHr){
     var color=qs('#hr-color').value;
     var width=qs('#hr-width').value+'px';
@@ -1635,14 +1769,14 @@ qs('#hr-confirm').addEventListener('click',function(){
   }
   qs('#hr-modal').classList.add('hidden');clickedHr=null;
 });
-qs('#hr-width').addEventListener('input',function(e){
+on('#hr-width','input',function(e){
   qs('#hr-width-val').textContent=e.target.value;
   if(clickedHr){clickedHr.style.border='none';clickedHr.style.borderTop=e.target.value+'px '+qs('#hr-style').value+' '+qs('#hr-color').value;}
 });
-qs('#hr-style').addEventListener('change',function(){
+on('#hr-style','change',function(){
   if(clickedHr){clickedHr.style.border='none';clickedHr.style.borderTop=qs('#hr-width').value+'px '+qs('#hr-style').value+' '+qs('#hr-color').value;}
 });
-qs('#hr-color').addEventListener('input',function(){
+on('#hr-color','input',function(){
   if(clickedHr){clickedHr.style.border='none';clickedHr.style.borderTop=qs('#hr-width').value+'px '+qs('#hr-style').value+' '+qs('#hr-color').value;}
 });
 
@@ -1884,7 +2018,7 @@ function renderHist(){
 function saveHist(title,tag,html,titles){nlHistory.unshift({title:title,tag:tag,date:today(),html:html,titles:titles||[]});if(nlHistory.length>10)nlHistory.length=10;localStorage.setItem('nl-history',JSON.stringify(nlHistory));renderHist();}
 function loadHist(idx){if(!nlHistory[idx])return;NL.innerHTML=nlHistory[idx].html;hasOrigData=false;origOut.innerHTML='';showEditor();
   /* 원본 대조 비활성화 */
-  if(isComparing){isComparing=false;qs('#compare-toggle').classList.remove('active');qs('#original-panel').classList.add('hidden');qs('#panel-divider').classList.add('hidden');}
+  isComparing=false;
   /* NL에서 data-section 읽어서 섹션 순서 칩 복원 */
   rebuildSectionChips();
   /* 제목 후보 복원 */
@@ -1900,7 +2034,7 @@ function loadHist(idx){if(!nlHistory[idx])return;NL.innerHTML=nlHistory[idx].htm
     if(dd){dd.classList.add('hidden');dd.innerHTML='';}
   }
   toast('히스토리에서 불러옴');}
-qs('#history-list').addEventListener('click',function(e){
+on('#history-list','click',function(e){
   /* 삭제 버튼 */
   var del=e.target.closest('.hi-delete');
   if(del){e.stopPropagation();var idx=+del.dataset.hd;nlHistory.splice(idx,1);localStorage.setItem('nl-history',JSON.stringify(nlHistory));renderHist();toast('히스토리 삭제됨');return;}
@@ -1932,11 +2066,20 @@ genBtn.addEventListener('click',function(){
         console.log('Images:',data.imgs.length);
         if(data.paras.length>0)console.log('First para:',data.paras[0].text.substring(0,100));
         var tag=item.tag==='auto'?classify(data.title+' '+data.paras.map(function(p){return p.text;}).join(' ')):item.tag;
-        return aiRewrite(data.paras,data.title,item.volumeText,item.writeStyle).catch(function(err){
+        return aiRewrite(data.paras,data.title,item.volumeText,item.writeStyle,item.url).catch(function(err){
           if(err.message==='NO_KEY'){showErr('API 키를 설정해주세요.');return null;}
           console.error('AI err:',err);toast('AI 실패: '+err.message.substring(0,60));return fallback(data.paras,data.title);
         }).then(function(ai){if(ai)sections.push({url:item.url,tag:tag,data:data,ai:ai,trackingUrl:item.trackingUrl||'',writeStyle:item.writeStyle||'subtitle'});});
-      }).catch(function(err){showErr(err.message==='PROXY_FAIL'?'프록시 실패: '+item.url:'오류: '+err.message);});
+      }).catch(function(err){
+        /* 프록시 실패해도 urlContext로 Gemini가 직접 읽으니까 계속 진행 */
+        console.warn('Proxy failed, using urlContext fallback:',item.url);
+        var tag=item.tag==='auto'?'아이지에이웍스':item.tag;
+        var data={title:'',paras:[],imgs:[]};
+        return aiRewrite(data.paras,data.title,item.volumeText,item.writeStyle,item.url).catch(function(err2){
+          if(err2.message==='NO_KEY'){showErr('API 키를 설정해주세요.');return null;}
+          console.error('AI err:',err2);toast('AI 실패: '+err2.message.substring(0,60));return null;
+        }).then(function(ai){if(ai)sections.push({url:item.url,tag:tag,data:data,ai:ai,trackingUrl:item.trackingUrl||'',writeStyle:item.writeStyle||'subtitle'});});
+      });
     });
   })(urls[i]);}
   chain.then(function(){
@@ -2431,7 +2574,7 @@ function showSnsMode(){
 function makeSnsUrlRow(){
   var row=document.createElement('div');
   row.className='url-row';
-  row.innerHTML='<span class="url-drag-handle"></span><div class="url-row-inner"><div class="url-row-top"><div class="url-row-main"><span class="url-icon">📎</span><input type="url" class="url-field sns-url-field" placeholder="SNS에 공유할 콘텐츠 URL을 입력하세요"></div><button class="url-remove-btn">✕</button></div></div>';
+  row.innerHTML='<div class="url-row-inner"><div class="url-row-top"><div class="url-row-main"><span class="url-icon">📎</span><input type="url" class="url-field sns-url-field" placeholder="SNS에 공유할 콘텐츠 URL을 입력하세요"></div><button class="url-remove-btn">✕</button></div></div>';
   row.querySelector('.url-remove-btn').addEventListener('click',function(){
     if(qs('#sns-url-list').querySelectorAll('.url-row').length>1)row.remove();
   });
@@ -2442,6 +2585,76 @@ qs('#sns-url-list').querySelector('.url-remove-btn').addEventListener('click',fu
   if(qs('#sns-url-list').querySelectorAll('.url-row').length>1)
     this.closest('.url-row').remove();
 });
+
+/* ---- SNS 입력 모드 탭 (URL 직접 / 뉴스레터 연동) ---- */
+(function(){
+  var tabs=qsa('.sns-input-tab');
+  var urlWrap=qs('#sns-url-input-wrap');
+  var nlWrap=qs('#sns-nl-import-wrap');
+
+  function renderNlImport(){
+    var list=qs('#sns-nl-url-list');
+    if(!lastGenUrls||lastGenUrls.length===0){
+      list.innerHTML='<p class="sns-nl-empty">뉴스레터를 먼저 생성하면<br>URL을 자동으로 불러올 수 있어요.</p>';
+      return;
+    }
+    var html='';
+    lastGenUrls.forEach(function(item,i){
+      var tag=item.tag&&item.tag!=='auto'?item.tag:'자동분류';
+      html+='<div class="sns-nl-url-item">'
+        +'<div class="sns-nl-url-item-info">'
+        +'<span class="sns-nl-url-item-tag">'+esc(tag)+'</span>'
+        +'<div class="sns-nl-url-item-url" title="'+esc(item.url)+'">'+esc(item.url)+'</div>'
+        +'</div>'
+        +'<button class="sns-nl-use-btn" data-idx="'+i+'">사용</button>'
+        +'</div>';
+    });
+    if(lastGenUrls.length>1){
+      html+='<button class="sns-nl-use-all-btn">전체 URL 사용하기 ('+lastGenUrls.length+'개)</button>';
+    }
+    list.innerHTML=html;
+    /* 개별 사용 */
+    list.querySelectorAll('.sns-nl-use-btn').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        var idx=parseInt(btn.dataset.idx);
+        var item=lastGenUrls[idx];
+        /* SNS URL 탭으로 전환 후 해당 URL 넣기 */
+        switchSnsInputTab('url');
+        var urlList=qs('#sns-url-list');
+        var fields=urlList.querySelectorAll('.sns-url-field');
+        if(fields.length>0){fields[0].value=item.url;}
+        toast('URL을 불러왔어요!');
+      });
+    });
+    /* 전체 사용 */
+    var allBtn=list.querySelector('.sns-nl-use-all-btn');
+    if(allBtn){
+      allBtn.addEventListener('click',function(){
+        switchSnsInputTab('url');
+        var urlList=qs('#sns-url-list');
+        /* 기존 행 제거 후 새로 추가 */
+        urlList.innerHTML='';
+        lastGenUrls.forEach(function(item){
+          var row=makeSnsUrlRow();
+          row.querySelector('.sns-url-field').value=item.url;
+          urlList.appendChild(row);
+        });
+        toast('전체 URL을 불러왔어요! ('+lastGenUrls.length+'개)');
+      });
+    }
+  }
+
+  function switchSnsInputTab(tab){
+    tabs.forEach(function(b){b.classList.toggle('active',b.dataset.itab===tab);});
+    urlWrap.style.display=tab==='url'?'':'none';
+    nlWrap.style.display=tab==='nl'?'':'none';
+    if(tab==='nl')renderNlImport();
+  }
+
+  tabs.forEach(function(btn){
+    btn.addEventListener('click',function(){switchSnsInputTab(btn.dataset.itab);});
+  });
+})();
 
 /* ---- 플랫폼 탭 전환 ---- */
 qsa('.sns-ptab').forEach(function(tab){
@@ -2454,13 +2667,13 @@ qsa('.sns-ptab').forEach(function(tab){
 });
 
 /* ---- 뒤로가기 ---- */
-qs('#sns-back-btn').addEventListener('click',function(){
+on('#sns-back-btn','click',function(){
   qs('#sns-results').classList.add('hidden');
   qs('#sns-section').classList.remove('hidden');
 });
 
 /* ---- 저장 패널 토글 ---- */
-qs('#sns-saved-toggle').addEventListener('click',function(){
+on('#sns-saved-toggle','click',function(){
   qs('#sns-history-panel').classList.add('hidden');
   var panel=qs('#sns-saved-panel');
   var isHidden=panel.classList.contains('hidden');
@@ -2474,7 +2687,7 @@ qs('#sns-saved-toggle').addEventListener('click',function(){
     }
   }
 });
-qs('#sns-saved-panel-close').addEventListener('click',function(){
+on('#sns-saved-panel-close','click',function(){
   qs('#sns-saved-panel').classList.add('hidden');
 });
 
@@ -2503,7 +2716,7 @@ function snsGenerate(urls){
     '1. 흥미를 유발하는 훅 문장 (데이터나 반전 포인트로 시작)',
     '2. 핵심 발견/인사이트를 2~3문장으로 자연스럽게 전개',
     '3. 소제목 + 불릿(-) 3~4개 (각 불릿은 핵심 수치나 인사이트)',
-    '   - 소제목은 "■ 핵심 요약" 같은 고정 문구 금지! 콘텐츠 내용에 맞는 포멀한 한 줄로 작성. 예: "■ 2025년 증권 앱 시장 변화", "■ MZ세대 투자 트렌드 3가지"',
+    '   - 소제목은 "■" 기호 대신 이모지(📌, 💡, 📊, 🔍, 🎯 등)를 사용해서 작성. 매번 다른 이모지를 골라. 예: "📊 2025년 증권 앱 시장 변화", "💡 MZ세대 투자 트렌드 3가지", "🎯 팬덤 오디언스 핵심 인사이트"',
     '4. CTA 1문장으로 마무리 (URL 없이)',
     '- 이모지는 글 전체에서 최대 2개만. 그 이상 절대 금지. 불릿에 이모지 넣지 마.',
     '- 3개 후보 중 1개는 반드시 이모지 없이 정적이고 전문적인 톤으로 작성.',
@@ -2520,14 +2733,14 @@ function snsGenerate(urls){
     '### 인스타그램',
     '다음 구조로 작성:',
     '1. 첫 줄: [콘텐츠 제목] — 대괄호 꺽쇠 안에 원문 제목을 간결하게. 예: [BTS 광화문 공연, 135만 팬덤 데이터 분석]',
-    '2. 본문: 5~6줄로 핵심 내용 작성. 짧고 임팩트 있는 문장 위주.',
-    '3. 마지막 문장은 반드시: "지금 바로 프로필 상단 링크를 통해 확인해 보세요!" 로 끝낼 것.',
-    '- 이모지는 글 전체에서 딱 2개만 사용. 그 이상 절대 금지.',
+    '2. 본문: 5~6줄로 핵심 내용 작성. 짧고 임팩트 있는 문장 위주. 단락 사이에 빈 줄(\\n\\n)을 넣어서 가독성 높게.',
+    '3. 마지막 문장은 반드시: "지금 바로 프로필 상단 링크 (📊아이지에이웍스 블로그)를 통해 확인해 보세요!" 로 끝낼 것. 이 문구 그대로 사용.',
+    '- ★ 이모지 반드시 2개 사용! 제목 바로 뒤가 아닌, 본문 중간이나 CTA 앞 등 자연스러운 위치에 배치. 제목 줄에는 이모지 넣지 마.',
     '- 200~350자 내외',
     '',
     '## 출력 형식',
     'JSON만 출력. 설명 없이 JSON만. 각 후보에 label(특징 2~4자)과 text를 포함. 플랫폼당 3개씩.',
-    'label 예시: "수치 강조", "스토리텔링", "질문형", "문제의식", "반전 포인트", "실용 전략", "데이터 중심", "감성 접근"',
+    'label 예시: "수치 강조", "스토리텔링", "질문형", "문제의식", "반전 포인트", "실용 전략", "데이터 중심", "감성 접근". label은 2~4자 특징만 간결하게. 부가 설명이나 부제 붙이지 마.',
     '원문 내용에 맞게 가장 적합한 3가지 각도를 AI가 자동 선택.',
     '```json',
     '{',
@@ -2585,7 +2798,7 @@ function snsGenerate(urls){
 }
 
 /* ---- 생성 버튼 ---- */
-qs('#sns-generate-btn').addEventListener('click',function(){
+on('#sns-generate-btn','click',function(){
   var key=getKey();
   if(!key){toast('⚙️ 설정에서 Gemini API 키를 먼저 입력하세요');qs('#settings-modal').classList.remove('hidden');return;}
 
@@ -2640,7 +2853,8 @@ function cleanSnsText(t){
 
 function renderSnsCandidates(){
   var wrap=qs('#sns-candidates-wrap');
-  wrap.innerHTML='';
+  wrap.innerHTML='<div class="sns-cards-inner" id="sns-cards-inner"></div>';
+  var wrap=qs('#sns-cards-inner');
   var rawList=(snsCandidates[snsActivePlatform]||[]).slice(0,3);
   var labelColors=['sns-label-0','sns-label-1','sns-label-2','sns-label-3','sns-label-4'];
 
@@ -2655,10 +2869,11 @@ function renderSnsCandidates(){
 
     var header=document.createElement('div');
     header.className='sns-card-header';
-    header.innerHTML='<span class="sns-card-label '+labelColors[idx%5]+'">'+esc(label)+'</span>'
+    var ls=getLabelStyle(label);
+    header.innerHTML='<span class="sns-card-label" style="border-left-color:'+ls.border+'">'+ls.emoji+' '+esc(label)+'</span>'
       +'<div style="display:flex;gap:4px;align-items:center">'
+      +'<button class="sns-icon-btn sns-preview-btn" title="미리보기" style="font-size:13px;line-height:1">🔎</button>'
       +'<button class="sns-icon-btn sns-copy-btn" title="복사"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>'
-      +'<button class="sns-icon-btn sns-preview-btn" title="미리보기"><svg width="12" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></button>'
       +'<button class="sns-icon-btn sns-card-save-btn" title="저장"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg></button>'
       +'<button class="sns-text-btn sns-edit-btn">수정</button>'
       +'</div>';
@@ -2687,12 +2902,26 @@ function renderSnsCandidates(){
     });
 
     /* 카드 직접 저장 */
-    header.querySelector('.sns-card-save-btn').addEventListener('click',function(e){
+    var saveBtn=header.querySelector('.sns-card-save-btn');
+    saveBtn.addEventListener('click',function(e){
       e.stopPropagation();
       var t=textEl.innerText||textEl.textContent;
-      snsSaved.unshift({id:Date.now(),platform:snsActivePlatform,text:t,label:label,date:today()});
-      if(snsSaved.length>50)snsSaved=snsSaved.slice(0,50);
-      saveSnsStorage();renderSnsSavedList();renderSidebarSnsSaved();toast('저장됨! 🔖');
+      if(this.classList.contains('saved')){
+        /* 저장 취소 — 같은 텍스트 찾아서 삭제 */
+        snsSaved=snsSaved.filter(function(s){return s.text!==t;});
+        saveSnsStorage();renderSnsSavedList();renderSidebarSnsSaved();
+        this.classList.remove('saved');
+        this.innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>';
+        toast('저장 취소됨');
+      } else {
+        /* 저장 */
+        snsSaved.unshift({id:Date.now(),platform:snsActivePlatform,text:t,label:label,date:today()});
+        if(snsSaved.length>50)snsSaved=snsSaved.slice(0,50);
+        saveSnsStorage();renderSnsSavedList();renderSidebarSnsSaved();
+        this.classList.add('saved');
+        this.innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>';
+        toast('저장됨!');
+      }
     });
 
     /* 수정 → 모달 열기 */
@@ -2710,74 +2939,46 @@ function renderSnsCandidates(){
       mText=cleanSnsText(mText);
       var bodyEl=qs('#sns-preview-body');
       bodyEl.style.background='#F8FAFC';
+      var ls=getLabelStyle(mLabel);
       bodyEl.innerHTML='<div style="margin-bottom:14px;display:flex;align-items:center;justify-content:space-between">'
-        +'<span class="sns-card-label '+labelColors[ci%5]+'" style="font-size:12px;padding:5px 14px">'+esc(mLabel)+'</span>'
+        +'<div style="display:flex;align-items:center;gap:8px">'
+        +'<span style="width:24px;height:24px;border-radius:50%;background:none;border:1px solid #E2E8F0;display:inline-flex;align-items:center;justify-content:center;color:#334155;font-size:13px;flex-shrink:0">'+platformIcons[snsActivePlatform]+'</span>'
+        +'<span class="sns-card-label" style="font-size:12px;padding:5px 14px;border-left-color:'+ls.border+'">'+ls.emoji+' '+esc(mLabel)+'</span>'
         +'</div>'
-        +'<div id="card-modal-text" contenteditable="true" style="background:#fff;border:1.5px solid #E2E8F0;border-radius:12px;padding:18px;font-size:14px;line-height:1.8;color:#1E293B;white-space:pre-wrap;outline:none;min-height:120px">'+esc(mText)+'</div>'
+        +'<span style="font-size:11px;color:#94A3B8">직접 수정하거나 재생성해보세요</span>'
+        +'</div>'
+        +'<div id="card-modal-text" contenteditable="true" style="background:#fff;border:1.5px solid #E2E8F0;border-radius:12px;padding:18px;font-size:14px;line-height:1.8;color:#1E293B;white-space:pre-wrap;outline:none;min-height:300px">'+esc(mText)+'</div>'
         +'<div style="display:flex;gap:8px;align-items:center;margin-top:14px;flex-wrap:wrap">'
         +'<select id="card-modal-tone" class="sns-tone-select" style="font-size:12px;padding:6px 12px"><option value="">톤</option><option value="casual">캐주얼</option><option value="professional">전문적</option><option value="hooking">후킹</option></select>'
         +'<select id="card-modal-style" class="sns-style-select" style="font-size:12px;padding:6px 12px"><option value="">스타일</option><option value="data">수치 강조</option><option value="story">스토리텔링</option><option value="question">질문형</option><option value="problem">문제의식</option><option value="reversal">반전 포인트</option></select>'
         +'<button id="card-modal-regen" class="btn-primary btn-sm">재생성</button>'
-        +'<button id="card-modal-source" class="sns-modal-icon-btn" title="원본 대조"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/></svg></button>'
         +'<div style="flex:1"></div>'
-        +'<button id="card-modal-save" class="sns-modal-icon-btn" title="저장"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg></button>'
         +'<button id="card-modal-copy" class="sns-modal-icon-btn" title="복사"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>'
+        +'<button id="card-modal-done" style="display:inline-flex;align-items:center;gap:6px;padding:8px 18px;background:#2563EB;color:#fff;border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s" title="수정 완료 후 카드에 반영">'
+        +'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'
+        +'수정 완료</button>'
         +'</div>';
-      qs('#sns-preview-modal').querySelector('h3').textContent='후보 '+(ci+1)+' 편집';
+      qs('#sns-preview-modal').querySelector('h3').textContent='텍스트 편집';
       qs('#sns-preview-modal').classList.remove('hidden');
 
       var modalText=qs('#card-modal-text');
-      modalText.addEventListener('input',function(){});
+
+      /* 수정 완료 — 카드에 반영 후 모달 닫기 */
+      function applyAndClose(){
+        var t=modalText.innerText||modalText.textContent;
+        if(t!==mText){
+          snsCandidates[snsActivePlatform][ci]={label:mLabel,text:t};
+          renderSnsCandidates();
+          toast('수정이 반영되었어요 ✓');
+        }
+        qs('#sns-preview-modal').classList.add('hidden');
+      }
+      qs('#card-modal-done').addEventListener('click',applyAndClose);
 
       /* 복사 */
       qs('#card-modal-copy').addEventListener('click',function(){
         var t=modalText.innerText||modalText.textContent;
         if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(function(){toast('복사됨!');});
-      });
-
-      /* 저장 */
-      qs('#card-modal-save').addEventListener('click',function(){
-        var t=modalText.innerText||modalText.textContent;
-        snsSaved.unshift({id:Date.now(),platform:snsActivePlatform,text:t,label:mLabel,date:today()});
-        if(snsSaved.length>50)snsSaved=snsSaved.slice(0,50);
-        saveSnsStorage();renderSnsSavedList();renderSidebarSnsSaved();
-        this.classList.add('saved');
-        this.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>';
-        toast('저장됨!');
-      });
-
-      /* 원본 대조 */
-      qs('#card-modal-source').addEventListener('click',function(){
-        var t=modalText.innerText||modalText.textContent;
-        var key=getKey();if(!key){toast('API 키를 설정해주세요');return;}
-        var btn=qs('#card-modal-source');btn.disabled=true;btn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spin"><circle cx="12" cy="12" r="10"/></svg>';
-        var sysP='아래 SNS 포스트 텍스트를 분석해서, 이 텍스트가 참고한 원문의 핵심 문장들을 추출해줘.\n\n'
-          +'출력 형식:\n'
-          +'- 원문에서 직접 따온 핵심 문장만 불릿(-)으로 나열\n'
-          +'- 3~6개\n'
-          +'- SNS 텍스트에서 인용하거나 참고한 원문의 실제 내용(수치, 사실, 데이터)만 추출\n'
-          +'- SNS 텍스트 자체를 반복하지 마. 원문 근거만.\n'
-          +'- 마크다운 금지, 간결하게';
-        var reqBody=JSON.stringify({system_instruction:{parts:[{text:sysP}]},contents:[{parts:[{text:'SNS 텍스트:\n'+t}]}],generationConfig:{temperature:0.3,maxOutputTokens:2048}});
-        fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key='+key,{
-          method:'POST',headers:{'Content-Type':'application/json'},body:reqBody
-        }).then(function(r){return r.json();}).then(function(d){
-          var c=d.candidates&&d.candidates[0];
-          if(!c||!c.content||!c.content.parts)throw new Error('응답 오류');
-          var txt='';for(var i=0;i<c.content.parts.length;i++){if(c.content.parts[i].text)txt+=c.content.parts[i].text;}
-          txt=txt.replace(/\*\*(.+?)\*\*/g,'$1');
-          bodyEl.innerHTML='<div style="display:flex;gap:16px;align-items:stretch">'
-            +'<div style="flex:1;background:#fff;border:1.5px solid #E2E8F0;border-radius:12px;overflow:hidden;display:flex;flex-direction:column">'
-            +'<div style="padding:10px 14px;border-bottom:1px solid #E2E8F0;background:#FAFBFF;font-size:11px;font-weight:700;color:#4F46E5">SNS 텍스트</div>'
-            +'<div style="padding:14px;font-size:12px;line-height:1.8;color:#1E293B;white-space:pre-wrap;flex:1">'+esc(t)+'</div>'
-            +'</div>'
-            +'<div style="flex:1;background:#fff;border:1.5px solid #E2E8F0;border-radius:12px;overflow:hidden;display:flex;flex-direction:column">'
-            +'<div style="padding:10px 14px;border-bottom:1px solid #E2E8F0;background:#FFF7ED;font-size:11px;font-weight:700;color:#EA580C">원문에서 따온 핵심 문장</div>'
-            +'<div style="padding:14px;font-size:12px;line-height:1.8;color:#334155;white-space:pre-wrap;flex:1">'+esc(txt)+'</div>'
-            +'</div></div>';
-          qs('#sns-preview-modal').querySelector('h3').textContent='원본 대조';
-          btn.disabled=false;btn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/></svg>';
-        }).catch(function(err){btn.disabled=false;btn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/></svg>';toast('실패: '+(err&&err.message||'오류'));});
       });
 
       /* 재생성 */
@@ -2790,21 +2991,31 @@ function renderSnsCandidates(){
         regenSingleCandidate(snsActivePlatform,ci,combined).then(function(result){
           var newText=cleanSnsText(result.text||'');
           modalText.textContent=newText;
-          snsCandidates[snsActivePlatform][ci]={label:result.label||mLabel,text:newText};
-          renderSnsCandidates();
-          btn.disabled=false;btn.textContent='재생성';toast('재생성 완료!');
+          btn.disabled=false;btn.textContent='재생성';
+          toast('재생성 완료!');
+          /* 재생성 후 저장 확인 바 표시 */
+          var existingBar=qs('.regen-save-bar');if(existingBar)existingBar.remove();
+          var bar=document.createElement('div');
+          bar.className='regen-save-bar';
+          bar.innerHTML='<span>💾 이 버전으로 저장할까요?<br><small style="font-weight:400;font-size:11px;color:#60A5FA">저장하지 않으면 기존 버전이 유지됩니다</small></span><button class="regen-save-yes">저장</button><button class="regen-save-no">취소</button>';
+          modalText.parentNode.insertBefore(bar,modalText.nextSibling);
+          bar.querySelector('.regen-save-yes').onclick=function(){
+            var t=modalText.innerText||modalText.textContent;
+            snsCandidates[snsActivePlatform][ci]={label:result.label||mLabel,text:t};
+            renderSnsCandidates();
+            snsSaved.unshift({id:Date.now(),platform:snsActivePlatform,text:t,label:result.label||mLabel,date:today()});
+            if(snsSaved.length>50)snsSaved=snsSaved.slice(0,50);
+            saveSnsStorage();renderSnsSavedList();renderSidebarSnsSaved();
+            toast('저장됨!');bar.remove();
+          };
+          bar.querySelector('.regen-save-no').onclick=function(){bar.remove();};
         }).catch(function(err){btn.disabled=false;btn.textContent='재생성';toast('실패: '+(err&&err.message||'오류'));});
       });
 
-      /* 모달 닫힐 때 수정 내용 반영 */
+      /* X 닫기 버튼 — 저장 안 하고 닫기 (원래 텍스트 유지) */
       var closeBtn=qs('#sns-preview-close');
       var origClose=closeBtn.onclick;
       closeBtn.onclick=function(){
-        var t=modalText.innerText||modalText.textContent;
-        if(t!==mText){
-          snsCandidates[snsActivePlatform][ci]={label:mLabel,text:t};
-          renderSnsCandidates();
-        }
         qs('#sns-preview-modal').classList.add('hidden');
         closeBtn.onclick=origClose;
       };
@@ -2824,64 +3035,77 @@ var platformColors={facebook:'#1877F2',linkedin:'#0A66C2',instagram:'#C13584'};
 var platformNames={facebook:'페이스북',linkedin:'링크드인',instagram:'인스타그램'};
 var platformIcons={facebook:'<i class="fa-brands fa-facebook"></i>',linkedin:'<i class="fa-brands fa-linkedin-in"></i>',instagram:'<i class="fa-brands fa-instagram"></i>'};
 
+var snsFilterPlatform='all';
+
 function renderSnsSavedList(){
   var list=qs('#sns-saved-list');
   /* 저장 카운트 업데이트 */
   var countEl=qs('#sns-saved-count');
   if(countEl)countEl.textContent=snsSaved.length>0?'('+snsSaved.length+')':'';
   if(!list)return;
-  if(snsSaved.length===0){
-    list.innerHTML='<p style="color:var(--light);font-size:12px;text-align:center;padding:32px 12px">아직 저장된 텍스트가 없어요</p>';return;
+  var filtered=snsFilterPlatform==='all'?snsSaved:snsSaved.filter(function(s){return s.platform===snsFilterPlatform;});
+  if(filtered.length===0){
+    list.innerHTML='<p style="color:var(--light);font-size:12px;text-align:center;padding:32px 12px">'+(snsFilterPlatform==='all'?'아직 저장된 텍스트가 없어요':'해당 플랫폼에 저장된 텍스트가 없어요')+'</p>';return;
   }
   list.innerHTML='';
-  snsSaved.forEach(function(item){
+  filtered.forEach(function(item){
     var el=document.createElement('div');
     el.className='sns-saved-item';
     var previewText=item.text.length>60?item.text.substring(0,60)+'...':item.text;
+    var platformCircleColors={facebook:'#1877F2',linkedin:'#0A66C2',instagram:'#E4405F'};
+    var circleColor=platformCircleColors[item.platform]||'#64748B';
+    var labelTag=item.label?'<span style="font-size:10px;color:#334155;padding:3px 10px;border-radius:20px;border:1px solid #E2E8F0;background:none">'+esc(item.label)+'</span>':'';
     el.innerHTML='<div class="sns-saved-item-top">'+
-      '<span class="sns-saved-item-platform">'+platformIcons[item.platform]+' '+platformNames[item.platform]+'</span>'+
+      '<div style="display:flex;align-items:center;gap:8px">'+
+      '<span style="width:20px;height:20px;border-radius:50%;background:none;border:1px solid #E2E8F0;display:inline-flex;align-items:center;justify-content:center;color:#334155;font-size:11px;flex-shrink:0">'+platformIcons[item.platform]+'</span>'+
+      labelTag+
+      '</div>'+
       '<button class="sns-saved-item-del">✕</button>'+
       '</div>'+
       '<div class="sns-saved-item-text" style="cursor:pointer">'+esc(previewText)+'</div>'+
-      '<div class="sns-saved-item-date">'+item.date+' · <span class="sns-saved-view-link">내용 보기 →</span></div>';
+      '<div class="sns-saved-item-date">'+item.date+' · <span class="sns-saved-view-link">편집</span></div>';
     /* 클릭 → 수정 모달 열기 (일반 수정과 동일한 UI) */
     function openSavedEdit(e){
       e.stopPropagation();
-      var labelColors=['sns-label-0','sns-label-1','sns-label-2','sns-label-3','sns-label-4'];
+      var savedLs=item.label?getLabelStyle(item.label):{emoji:'',border:'#94A3B8'};
       var bodyEl=qs('#sns-preview-body');
       bodyEl.style.background='#F8FAFC';
       bodyEl.innerHTML='<div style="margin-bottom:14px;display:flex;align-items:center;justify-content:space-between">'
-        +'<span class="sns-card-label '+labelColors[0]+'" style="font-size:12px;padding:5px 14px">'+platformIcons[item.platform]+' '+platformNames[item.platform]+'</span>'
+        +'<div style="display:flex;align-items:center;gap:8px">'
+        +'<span style="width:24px;height:24px;border-radius:50%;background:none;border:1px solid #E2E8F0;display:inline-flex;align-items:center;justify-content:center;color:#334155;font-size:13px;flex-shrink:0">'+platformIcons[item.platform]+'</span>'
+        +(item.label?'<span class="sns-card-label" style="font-size:12px;padding:5px 14px;border-left-color:'+savedLs.border+'">'+savedLs.emoji+' '+esc(item.label)+'</span>':'')
         +'</div>'
-        +'<div id="saved-edit-text" contenteditable="true" style="background:#fff;border:1.5px solid #E2E8F0;border-radius:12px;padding:18px;font-size:14px;line-height:1.8;color:#1E293B;white-space:pre-wrap;outline:none;min-height:120px">'+esc(item.text)+'</div>'
+        +'<span style="font-size:11px;color:#94A3B8">직접 수정하거나 재생성해보세요</span>'
+        +'</div>'
+        +'<div id="saved-edit-text" contenteditable="true" style="background:#fff;border:1.5px solid #E2E8F0;border-radius:12px;padding:18px;font-size:14px;line-height:1.8;color:#1E293B;white-space:pre-wrap;outline:none;min-height:300px">'+esc(item.text)+'</div>'
         +'<div style="display:flex;gap:8px;align-items:center;margin-top:14px;flex-wrap:wrap">'
         +'<select id="saved-modal-tone" class="sns-tone-select" style="font-size:12px;padding:6px 12px"><option value="">톤</option><option value="casual">캐주얼</option><option value="professional">전문적</option><option value="hooking">후킹</option></select>'
         +'<select id="saved-modal-style" class="sns-style-select" style="font-size:12px;padding:6px 12px"><option value="">스타일</option><option value="data">수치 강조</option><option value="story">스토리텔링</option><option value="question">질문형</option><option value="problem">문제의식</option><option value="reversal">반전 포인트</option></select>'
         +'<button id="saved-modal-regen" class="btn-primary btn-sm">재생성</button>'
-        +'<button id="saved-modal-source" class="sns-modal-icon-btn" title="원본 대조"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/></svg></button>'
         +'<div style="flex:1"></div>'
-        +'<button id="saved-modal-save" class="sns-modal-icon-btn saved" title="저장됨"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg></button>'
         +'<button id="saved-modal-copy" class="sns-modal-icon-btn" title="복사"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>'
+        +'<button id="saved-modal-done" style="display:inline-flex;align-items:center;gap:6px;padding:8px 18px;background:#2563EB;color:#fff;border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s">'
+        +'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'
+        +'수정 완료</button>'
         +'</div>';
       qs('#sns-preview-modal').querySelector('h3').textContent='저장된 텍스트 편집';
       qs('#sns-preview-modal').classList.remove('hidden');
 
       var modalText=qs('#saved-edit-text');
 
+      /* 수정 완료 — 저장 목록에 반영 후 닫기 */
+      qs('#saved-modal-done').addEventListener('click',function(){
+        var t=modalText.innerText||modalText.textContent;
+        item.text=t;
+        saveSnsStorage();renderSnsSavedList();renderSidebarSnsSaved();
+        qs('#sns-preview-modal').classList.add('hidden');
+        toast('수정 내용이 저장되었어요 ✓');
+      });
+
       /* 복사 */
       qs('#saved-modal-copy').addEventListener('click',function(){
         var t=modalText.innerText||modalText.textContent;
         navigator.clipboard.writeText(t).then(function(){toast('복사됨!');});
-      });
-
-      /* 저장 (수정 내용 저장) */
-      qs('#saved-modal-save').addEventListener('click',function(){
-        var t=modalText.innerText||modalText.textContent;
-        item.text=t;
-        saveSnsStorage();
-        renderSnsSavedList();
-        renderSidebarSnsSaved();
-        toast('수정 내용 저장됨 ✓');
       });
 
       /* 재생성 */
@@ -2891,44 +3115,29 @@ function renderSnsSavedList(){
         var style=qs('#saved-modal-style').value;
         var key=getKey();if(!key){toast('API 키를 설정해주세요');return;}
         var btn=qs('#saved-modal-regen');btn.disabled=true;btn.textContent='⏳';
-        var toneMap={casual:'캐주얼하고 친근한',professional:'전문적이고 신뢰감 있는',hooking:'강렬하고 후킹되는'};
-        var styleMap={data:'수치/데이터 강조',story:'스토리텔링',question:'질문형',problem:'문제의식 제기',reversal:'반전 포인트'};
-        var sysP='아래 SNS 텍스트를 다시 작성해줘.\n\n';
+        var toneMap={casual:'조금 더 부드럽고 읽기 편하게 (과도한 변화 없이)',professional:'조금 더 격식있게 (기존 구조 유지)',hooking:'첫 문장만 더 임팩트 있게 (나머지 유지)'};
+        var styleMap={data:'수치/데이터를 좀 더 전면에',story:'스토리텔링 흐름으로 살짝 재배치',question:'도입부를 질문형으로',problem:'도입부에서 문제의식 강조',reversal:'도입부에 반전 포인트 배치'};
+        var sysP='아래 SNS 텍스트를 다시 작성해줘. 기존 구조와 톤을 최대한 유지하면서 아래 방향만 살짝 반영해.\n\n';
         if(tone)sysP+='톤: '+toneMap[tone]+'\n';
         if(style)sysP+='스타일: '+styleMap[style]+'\n';
-        sysP+='\n기존 텍스트:\n'+t+'\n\n새로운 텍스트만 출력해줘.';
+        sysP+='★ 마크다운(**, * 등) 절대 금지\n★ 기존 불릿/구조 유지\n★ 단락 사이에 반드시 빈 줄(\\n\\n) 유지\n\n기존 텍스트:\n'+t+'\n\n새로운 텍스트만 출력. 설명 없이.';
         callGemini(key,[{role:'user',parts:[{text:sysP}]}]).then(function(res){
           var txt=(res&&res.candidates&&res.candidates[0]&&res.candidates[0].content&&res.candidates[0].content.parts&&res.candidates[0].content.parts[0]&&res.candidates[0].content.parts[0].text)||'';
           modalText.textContent=txt.trim();
           btn.disabled=false;btn.textContent='재생성';
+          toast('재생성 완료!');
+          var existingBar=qs('.regen-save-bar');if(existingBar)existingBar.remove();
+          var bar=document.createElement('div');
+          bar.className='regen-save-bar';
+          bar.innerHTML='<div class="regen-save-bar-icon">✨</div><div class="regen-save-bar-text"><strong>재생성 완료! 이 버전으로 저장할까요?</strong><span>저장하지 않으면 기존 내용이 유지됩니다</span></div><button class="regen-save-yes">저장하기</button><button class="regen-save-no">취소</button>';
+          modalText.parentNode.insertBefore(bar,modalText.nextSibling);
+          bar.querySelector('.regen-save-yes').onclick=function(){
+            var t2=modalText.innerText||modalText.textContent;
+            item.text=t2;saveSnsStorage();renderSnsSavedList();renderSidebarSnsSaved();
+            toast('저장됨! 🔖');bar.remove();
+          };
+          bar.querySelector('.regen-save-no').onclick=function(){bar.remove();};
         }).catch(function(err){btn.disabled=false;btn.textContent='재생성';toast('실패');});
-      });
-
-      /* 원본 대조 */
-      qs('#saved-modal-source').addEventListener('click',function(){
-        var t=modalText.innerText||modalText.textContent;
-        var key=getKey();if(!key){toast('API 키를 설정해주세요');return;}
-        var btn=qs('#saved-modal-source');btn.disabled=true;btn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spin"><circle cx="12" cy="12" r="10"/></svg>';
-        var sysP='아래 SNS 포스트 텍스트를 분석해서, 이 텍스트가 참고한 원문의 핵심 문장들을 추출해줘.\n\n'
-          +'출력 형식:\n'
-          +'- 원문에서 직접 따온 핵심 문장만 불릿(-)으로 나열\n'
-          +'- 3~6개\n'
-          +'- SNS 텍스트에서 인용하거나 참고한 원문의 실제 내용(수치, 사실, 데이터)만 추출\n'
-          +'\nSNS 텍스트:\n'+t;
-        callGemini(key,[{role:'user',parts:[{text:sysP}]}]).then(function(res){
-          var txt=(res&&res.candidates&&res.candidates[0]&&res.candidates[0].content&&res.candidates[0].content.parts&&res.candidates[0].content.parts[0]&&res.candidates[0].content.parts[0].text)||'';
-          bodyEl.innerHTML='<div style="display:flex;gap:16px;height:100%">'
-            +'<div style="flex:1;display:flex;flex-direction:column;background:#fff;border-radius:12px;border:1px solid #E2E8F0;overflow:hidden">'
-            +'<div style="padding:10px 14px;border-bottom:1px solid #E2E8F0;font-size:11px;font-weight:700;color:#64748B">SNS 텍스트</div>'
-            +'<div style="padding:14px;font-size:12px;line-height:1.8;color:#334155;white-space:pre-wrap;flex:1;overflow-y:auto">'+esc(t)+'</div>'
-            +'</div>'
-            +'<div style="flex:1;display:flex;flex-direction:column;background:#fff;border-radius:12px;border:1px solid #E2E8F0;overflow:hidden">'
-            +'<div style="padding:10px 14px;border-bottom:1px solid #E2E8F0;font-size:11px;font-weight:700;color:#64748B">원문 핵심 문장</div>'
-            +'<div style="padding:14px;font-size:12px;line-height:1.8;color:#334155;white-space:pre-wrap;flex:1">'+esc(txt)+'</div>'
-            +'</div></div>';
-          qs('#sns-preview-modal').querySelector('h3').textContent='원본 대조';
-          btn.disabled=false;btn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/></svg>';
-        }).catch(function(err){btn.disabled=false;btn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/></svg>';toast('실패');});
       });
     }
     el.querySelector('.sns-saved-item-text').addEventListener('click',openSavedEdit);
@@ -2946,6 +3155,16 @@ function renderSnsSavedList(){
 
 renderSnsSavedList();
 
+/* 저장 목록 필터 */
+qsa('.sns-filter-btn').forEach(function(btn){
+  btn.addEventListener('click',function(){
+    qsa('.sns-filter-btn').forEach(function(b){b.classList.remove('active');b.style.background='none';b.style.color='var(--sub)';});
+    btn.classList.add('active');btn.style.background='var(--brand)';btn.style.color='#fff';
+    snsFilterPlatform=btn.dataset.filter;
+    renderSnsSavedList();
+  });
+});
+
 /* ---- SNS 히스토리 ---- */
 var snsHistory=[];
 try{snsHistory=JSON.parse(localStorage.getItem('sns-history')||'[]');}catch(e){snsHistory=[];}
@@ -2953,7 +3172,7 @@ function saveSnsHistory(){localStorage.setItem('sns-history',JSON.stringify(snsH
 
 function addSnsHistory(candidates,urls){
   snsHistory.unshift({id:Date.now(),date:today(),urls:urls.map(function(u){return u.url;}),candidates:candidates});
-  if(snsHistory.length>20)snsHistory=snsHistory.slice(0,20);
+  if(snsHistory.length>10)snsHistory=snsHistory.slice(0,10);
   saveSnsHistory();
   renderSnsHistoryList();
 }
@@ -2964,9 +3183,9 @@ function renderSnsHistoryList(){
   if(countEl)countEl.textContent=snsHistory.length>0?'('+snsHistory.length+')':'';
   if(!list)return;
   if(snsHistory.length===0){
-    list.innerHTML='<p style="color:var(--light);font-size:12px;text-align:center;padding:32px 12px">아직 히스토리가 없어요</p>';return;
+    list.innerHTML='<p style="color:var(--light);font-size:12px;text-align:center;padding:32px 12px">아직 히스토리가 없어요<br><span style="font-size:10px;color:#CBD5E1">최대 10개까지 자동 저장돼요</span></p>';return;
   }
-  list.innerHTML='';
+  list.innerHTML='<p style="font-size:10px;color:#CBD5E1;text-align:center;padding:4px 0 8px;margin:0">최대 10개까지 자동 저장</p>';
   snsHistory.forEach(function(item,hi){
     var el=document.createElement('div');
     el.className='sns-saved-item';
@@ -2999,6 +3218,43 @@ function renderSnsHistoryList(){
 }
 renderSnsHistoryList();
 
+/* ---- SNS Recent (초기 화면) ---- */
+function renderSnsRecent(){
+  var el=qs('#sns-recent');if(!el)return;
+  var hasHistory=snsHistory.length>0;
+  var hasSaved=snsSaved.length>0;
+  if(!hasHistory&&!hasSaved){el.innerHTML='';return;}
+  var html='';
+  if(hasHistory){
+    html+='<div style="font-size:11px;font-weight:800;color:#1E293B;letter-spacing:1px;margin-bottom:8px;text-transform:uppercase">RECENT</div>';
+    snsHistory.slice(0,3).forEach(function(item,i){
+      var fbPreview=(item.candidates.facebook&&item.candidates.facebook[0])?(typeof item.candidates.facebook[0]==='object'?item.candidates.facebook[0].text:item.candidates.facebook[0]):'';
+      html+='<div class="recent-item" data-sns-ri="'+i+'"><span class="ri-tag">최근</span><span class="ri-title">'+esc(fbPreview.substring(0,45))+'...</span><span class="ri-date">'+item.date+'</span></div>';
+    });
+  }
+  if(hasSaved){
+    html+='<div style="font-size:9px;color:#94A3B8;letter-spacing:1px;margin:16px 0 6px;text-transform:uppercase">저장됨</div>';
+    snsSaved.slice(0,3).forEach(function(item,i){
+      html+='<div class="recent-item" data-sns-si="'+i+'"><span class="ri-tag">'+platformNames[item.platform]+'</span><span class="ri-title">'+esc(item.text.substring(0,45))+'...</span><span class="ri-date">'+item.date+'</span></div>';
+    });
+  }
+  el.innerHTML=html;
+  el.querySelectorAll('[data-sns-ri]').forEach(function(r){
+    r.addEventListener('click',function(){
+      var idx=+r.dataset.snsRi;
+      var item=snsHistory[idx];if(!item)return;
+      snsCandidates=item.candidates;
+      snsActivePlatform='facebook';
+      qsa('.sns-ptab').forEach(function(t){t.classList.remove('active');});
+      qs('[data-platform="facebook"]').classList.add('active');
+      qs('#sns-section').classList.add('hidden');
+      qs('#sns-results').classList.remove('hidden');
+      renderSnsCandidates();
+    });
+  });
+}
+renderSnsRecent();
+
 /* ---- 사이드바 SNS 탭 전환 ---- */
 qsa('.sidebar-tab-sns').forEach(function(tab){
   tab.addEventListener('click',function(){
@@ -3021,26 +3277,34 @@ function renderSidebarSnsSaved(){
       +'<div class="hi-title">'+esc((item.text||'').substring(0,50))+'</div>'
       +'<button class="hi-delete" style="background:none;border:none;color:#ccc;cursor:pointer;font-size:14px;padding:0 2px;flex-shrink:0">✕</button>'
       +'</div>'
-      +'<div class="hi-date">클릭해서 복사 · '+item.date+'</div>'
-      +'<span class="hi-tag" style="background:#F1F5F9;color:var(--text);border:1px solid var(--border)">'+platformIcons[item.platform]+' '+platformNames[item.platform]+'</span>';
+      +'<div class="hi-date">편집 · '+item.date+'</div>'
+      +'<div style="display:flex;align-items:center;gap:6px;margin-top:6px;flex-wrap:wrap">'
+      +'<span style="width:20px;height:20px;border-radius:50%;background:none;border:1px solid #E2E8F0;display:inline-flex;align-items:center;justify-content:center;color:#334155;font-size:11px;flex-shrink:0">'+platformIcons[item.platform]+'</span>'
+      +(item.label?'<span style="font-size:10px;color:#334155;padding:3px 10px;border-radius:20px;border:1px solid #E2E8F0;background:none">'+esc(item.label)+'</span>':'')
+      +'</div>';
     el.addEventListener('click',function(e){
       if(e.target.closest('.hi-delete'))return;
       /* 저장된 텍스트 수정 모달 바로 열기 (일반 수정과 동일한 UI) */
-      var labelColors=['sns-label-0','sns-label-1','sns-label-2','sns-label-3','sns-label-4'];
+      var sidebarLs=item.label?getLabelStyle(item.label):{emoji:'',border:'#94A3B8'};
       var bodyEl=qs('#sns-preview-body');
       bodyEl.style.background='#F8FAFC';
       bodyEl.innerHTML='<div style="margin-bottom:14px;display:flex;align-items:center;justify-content:space-between">'
-        +'<span class="sns-card-label '+labelColors[0]+'" style="font-size:12px;padding:5px 14px">'+platformIcons[item.platform]+' '+platformNames[item.platform]+'</span>'
+        +'<div style="display:flex;align-items:center;gap:8px">'
+        +'<span style="width:24px;height:24px;border-radius:50%;background:none;border:1px solid #E2E8F0;display:inline-flex;align-items:center;justify-content:center;color:#334155;font-size:13px;flex-shrink:0">'+platformIcons[item.platform]+'</span>'
+        +(item.label?'<span class="sns-card-label" style="font-size:12px;padding:5px 14px;border-left-color:'+sidebarLs.border+'">'+sidebarLs.emoji+' '+esc(item.label)+'</span>':'')
         +'</div>'
-        +'<div id="sidebar-saved-edit-text" contenteditable="true" style="background:#fff;border:1.5px solid #E2E8F0;border-radius:12px;padding:18px;font-size:14px;line-height:1.8;color:#1E293B;white-space:pre-wrap;outline:none;min-height:120px">'+esc(item.text)+'</div>'
+        +'<span style="font-size:11px;color:#94A3B8">직접 수정하거나 재생성해보세요</span>'
+        +'</div>'
+        +'<div id="sidebar-saved-edit-text" contenteditable="true" style="background:#fff;border:1.5px solid #E2E8F0;border-radius:12px;padding:18px;font-size:14px;line-height:1.8;color:#1E293B;white-space:pre-wrap;outline:none;min-height:300px">'+esc(item.text)+'</div>'
         +'<div style="display:flex;gap:8px;align-items:center;margin-top:14px;flex-wrap:wrap">'
         +'<select id="sidebar-saved-tone" class="sns-tone-select" style="font-size:12px;padding:6px 12px"><option value="">톤</option><option value="casual">캐주얼</option><option value="professional">전문적</option><option value="hooking">후킹</option></select>'
         +'<select id="sidebar-saved-style" class="sns-style-select" style="font-size:12px;padding:6px 12px"><option value="">스타일</option><option value="data">수치 강조</option><option value="story">스토리텔링</option><option value="question">질문형</option><option value="problem">문제의식</option><option value="reversal">반전 포인트</option></select>'
         +'<button id="sidebar-saved-regen" class="btn-primary btn-sm">재생성</button>'
-        +'<button id="sidebar-saved-source" class="sns-modal-icon-btn" title="원본 대조"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/></svg></button>'
         +'<div style="flex:1"></div>'
-        +'<button id="sidebar-saved-save" class="sns-modal-icon-btn saved" title="저장됨"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg></button>'
         +'<button id="sidebar-saved-copy" class="sns-modal-icon-btn" title="복사"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>'
+        +'<button id="sidebar-saved-done" style="display:inline-flex;align-items:center;gap:6px;padding:8px 18px;background:#2563EB;color:#fff;border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s">'
+        +'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'
+        +'수정 완료</button>'
         +'</div>';
       qs('#sns-preview-modal').querySelector('h3').textContent='저장된 텍스트 편집';
       qs('#sns-preview-modal').classList.remove('hidden');
@@ -3054,48 +3318,15 @@ function renderSidebarSnsSaved(){
         navigator.clipboard.writeText(t).then(function(){toast('복사됨!');});
       });
 
-      /* 저장 (수정 내용 저장) */
-      qs('#sidebar-saved-save').addEventListener('click',function(){
+      /* 수정 완료 — 저장 후 모달 닫기 */
+      qs('#sidebar-saved-done').addEventListener('click',function(){
         var t=modalText.innerText||modalText.textContent;
         item.text=t;
         saveSnsStorage();
         renderSnsSavedList();
         renderSidebarSnsSaved();
-        toast('수정 내용 저장됨 ✓');
-      });
-
-      /* 원본 대조 */
-      qs('#sidebar-saved-source').addEventListener('click',function(){
-        var t=modalText.innerText||modalText.textContent;
-        var key=getKey();if(!key){toast('API 키를 설정해주세요');return;}
-        var btn=qs('#sidebar-saved-source');btn.disabled=true;btn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spin"><circle cx="12" cy="12" r="10"/></svg>';
-        var sysP='아래 SNS 포스트 텍스트를 분석해서, 이 텍스트가 참고한 원문의 핵심 문장들을 추출해줘.\n\n'
-          +'출력 형식:\n'
-          +'- 원문에서 직접 따온 핵심 문장만 불릿(-)으로 나열\n'
-          +'- 3~6개\n'
-          +'- SNS 텍스트에서 인용하거나 참고한 원문의 실제 내용(수치, 사실, 데이터)만 추출\n'
-          +'- SNS 텍스트 자체를 반복하지 마. 원문 근거만.\n'
-          +'- 마크다운 금지, 간결하게';
-        var reqBody=JSON.stringify({system_instruction:{parts:[{text:sysP}]},contents:[{parts:[{text:'SNS 텍스트:\n'+t}]}],generationConfig:{temperature:0.3,maxOutputTokens:2048}});
-        fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key='+key,{
-          method:'POST',headers:{'Content-Type':'application/json'},body:reqBody
-        }).then(function(r){return r.json();}).then(function(d){
-          var c=d.candidates&&d.candidates[0];
-          if(!c||!c.content||!c.content.parts)throw new Error('응답 오류');
-          var txt='';for(var i=0;i<c.content.parts.length;i++){if(c.content.parts[i].text)txt+=c.content.parts[i].text;}
-          txt=txt.replace(/\*\*(.+?)\*\*/g,'$1');
-          bodyEl.innerHTML='<div style="display:flex;gap:16px;align-items:stretch">'
-            +'<div style="flex:1;background:#fff;border:1.5px solid #E2E8F0;border-radius:12px;overflow:hidden;display:flex;flex-direction:column">'
-            +'<div style="padding:10px 14px;border-bottom:1px solid #E2E8F0;background:#FAFBFF;font-size:11px;font-weight:700;color:#4F46E5">SNS 텍스트</div>'
-            +'<div style="padding:14px;font-size:12px;line-height:1.8;color:#1E293B;white-space:pre-wrap;flex:1">'+esc(t)+'</div>'
-            +'</div>'
-            +'<div style="flex:1;background:#fff;border:1.5px solid #E2E8F0;border-radius:12px;overflow:hidden;display:flex;flex-direction:column">'
-            +'<div style="padding:10px 14px;border-bottom:1px solid #E2E8F0;background:#FFF7ED;font-size:11px;font-weight:700;color:#EA580C">원문에서 따온 핵심 문장</div>'
-            +'<div style="padding:14px;font-size:12px;line-height:1.8;color:#334155;white-space:pre-wrap;flex:1">'+esc(txt)+'</div>'
-            +'</div></div>';
-          qs('#sns-preview-modal').querySelector('h3').textContent='원본 대조';
-          btn.disabled=false;btn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/></svg>';
-        }).catch(function(err){btn.disabled=false;btn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/></svg>';toast('실패: '+(err&&err.message||'오류'));});
+        qs('#sns-preview-modal').classList.add('hidden');
+        toast('수정 내용이 저장되었어요 ✓');
       });
 
       /* 재생성 */
@@ -3105,16 +3336,29 @@ function renderSidebarSnsSaved(){
         var style=qs('#sidebar-saved-style').value;
         var key=getKey();if(!key){toast('API 키를 설정해주세요');return;}
         var btn=qs('#sidebar-saved-regen');btn.disabled=true;btn.textContent='⏳';
-        var toneMap={casual:'캐주얼하고 친근한',professional:'전문적이고 신뢰감 있는',hooking:'강렬하고 후킹되는'};
-        var styleMap={data:'수치/데이터 강조',story:'스토리텔링',question:'질문형',problem:'문제의식 제기',reversal:'반전 포인트'};
-        var sysP='아래 SNS 텍스트를 다시 작성해줘.\n\n';
+        var toneMap={casual:'조금 더 부드럽고 읽기 편하게 (과도한 변화 없이)',professional:'조금 더 격식있게 (기존 구조 유지)',hooking:'첫 문장만 더 임팩트 있게 (나머지 유지)'};
+        var styleMap={data:'수치/데이터를 좀 더 전면에',story:'스토리텔링 흐름으로 살짝 재배치',question:'도입부를 질문형으로',problem:'도입부에서 문제의식 강조',reversal:'도입부에 반전 포인트 배치'};
+        var sysP='아래 SNS 텍스트를 다시 작성해줘. 기존 구조와 톤을 최대한 유지하면서 아래 방향만 살짝 반영해.\n\n';
         if(tone)sysP+='톤: '+toneMap[tone]+'\n';
         if(style)sysP+='스타일: '+styleMap[style]+'\n';
-        sysP+='\n기존 텍스트:\n'+t+'\n\n새로운 텍스트만 출력해줘.';
+        sysP+='★ 마크다운(**, * 등) 절대 금지\n★ 기존 불릿/구조 유지\n★ 단락 사이에 반드시 빈 줄(\\n\\n) 유지\n\n기존 텍스트:\n'+t+'\n\n새로운 텍스트만 출력. 설명 없이.';
         callGemini(key,[{role:'user',parts:[{text:sysP}]}]).then(function(res){
           var txt=(res&&res.candidates&&res.candidates[0]&&res.candidates[0].content&&res.candidates[0].content.parts&&res.candidates[0].content.parts[0]&&res.candidates[0].content.parts[0].text)||'';
           modalText.textContent=txt.trim();
-          btn.disabled=false;btn.textContent='재생성';toast('재생성 완료!');
+          btn.disabled=false;btn.textContent='재생성';
+          toast('재생성 완료!');
+          /* 재생성 후 저장 확인 바 표시 */
+          var existingBar=qs('.regen-save-bar');if(existingBar)existingBar.remove();
+          var bar=document.createElement('div');
+          bar.className='regen-save-bar';
+          bar.innerHTML='<span>💾 이 내용으로 저장할까요?</span><button class="regen-save-yes">저장</button><button class="regen-save-no">취소</button>';
+          modalText.parentNode.insertBefore(bar,modalText.nextSibling);
+          bar.querySelector('.regen-save-yes').onclick=function(){
+            var found=snsSaved.find(function(s){return s.id===item.id;});
+            if(found){found.text=txt.trim();saveSnsStorage();renderSidebarSnsSaved();renderSnsSavedList();toast('저장 완료!');}
+            bar.remove();
+          };
+          bar.querySelector('.regen-save-no').onclick=function(){bar.remove();};
         }).catch(function(err){btn.disabled=false;btn.textContent='재생성';toast('실패: '+(err&&err.message||'오류'));});
       });
     });
@@ -3130,7 +3374,7 @@ function renderSidebarSnsSaved(){
 /* ---- 사이드바 SNS 히스토리 렌더링 ---- */
 function renderSidebarSnsHistory(){
   var list=qs('#sidebar-sns-history');if(!list)return;
-  if(snsHistory.length===0){list.innerHTML='<p class="history-empty">아직 히스토리가 없어요</p>';return;}
+  if(snsHistory.length===0){list.innerHTML='<p class="history-empty">아직 히스토리가 없어요<br><span style="font-size:10px;color:#CBD5E1">최대 10개까지 자동 저장돼요</span></p>';return;}
   list.innerHTML='';
   snsHistory.forEach(function(item,hi){
     var el=document.createElement('div');el.className='history-item';el.style.cursor='pointer';
@@ -3168,13 +3412,13 @@ function renderSidebarSnsHistory(){
 }
 
 /* 히스토리 패널 토글 */
-qs('#sns-history-toggle').addEventListener('click',function(){
+on('#sns-history-toggle','click',function(){
   var panel=qs('#sns-history-panel');
   qs('#sns-saved-panel').classList.add('hidden');
   panel.classList.toggle('hidden');
   renderSnsHistoryList();
 });
-qs('#sns-history-panel-close').addEventListener('click',function(){
+on('#sns-history-panel-close','click',function(){
   qs('#sns-history-panel').classList.add('hidden');
 });
 
@@ -3189,7 +3433,7 @@ function updateMixCount(){
 /* 텍스트 선택 시 플로팅 버튼 */
 var mixFloat=document.createElement('button');
 mixFloat.className='rewrite-float';
-mixFloat.textContent='📌 조합함에 추가';
+mixFloat.textContent='🧩 조합함에 추가';
 mixFloat.style.display='none';
 document.body.appendChild(mixFloat);
 
@@ -3213,7 +3457,7 @@ mixFloat.addEventListener('mousedown',function(e){
   if(mixFloat._selectedText){
     snsMixItems.push({id:Date.now(),text:mixFloat._selectedText});
     updateMixCount();
-    toast('📌 조합함에 추가됨 ('+snsMixItems.length+'개)');
+    toast('🧩 조합함에 추가됨 ('+snsMixItems.length+'개)');
     window.getSelection().removeAllRanges();
   }
   mixFloat.style.display='none';
@@ -3221,8 +3465,7 @@ mixFloat.addEventListener('mousedown',function(e){
 document.addEventListener('mousedown',function(e){if(e.target!==mixFloat)mixFloat.style.display='none';});
 
 /* 조합 모달 */
-qs('#sns-mix-btn').addEventListener('click',function(){
-  if(snsMixItems.length===0){toast('후보에서 마음에 드는 문장을 드래그 선택해서 추가하세요');return;}
+on('#sns-mix-btn','click',function(){
   showMixModal();
 });
 
@@ -3230,13 +3473,33 @@ function showMixModal(){
   var body=qs('#sns-preview-body');
   body.style.background='#F8FAFC';
 
+  /* 비어있을 때 사용법 안내 */
+  if(snsMixItems.length===0){
+    body.innerHTML='<div style="text-align:center;padding:40px 20px">'
+      +'<div style="font-size:48px;margin-bottom:16px">🧩</div>'
+      +'<div style="font-size:16px;font-weight:700;color:#1E293B;margin-bottom:8px">조합함이 비어있어요</div>'
+      +'<div style="font-size:13px;color:#64748B;line-height:1.8;margin-bottom:24px">여러 후보에서 마음에 드는 문장만 골라<br>나만의 텍스트를 만들어보세요!</div>'
+      +'<div style="background:#fff;border:1.5px solid #E2E8F0;border-radius:14px;padding:20px;text-align:left;max-width:360px;margin:0 auto">'
+      +'<div style="font-size:12px;font-weight:700;color:#1E293B;margin-bottom:12px">사용 방법</div>'
+      +'<div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px"><span style="background:#F1F5F9;color:#334155;font-weight:700;font-size:11px;padding:3px 8px;border-radius:6px;flex-shrink:0">1</span><span style="font-size:12px;color:#334155;line-height:1.6">후보 카드에서 원하는 문장을 <strong>드래그로 선택</strong></span></div>'
+      +'<div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px"><span style="background:#F1F5F9;color:#334155;font-weight:700;font-size:11px;padding:3px 8px;border-radius:6px;flex-shrink:0">2</span><span style="font-size:12px;color:#334155;line-height:1.6">나타나는 <strong>"🧩 조합함에 추가"</strong> 버튼 클릭</span></div>'
+      +'<div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px"><span style="background:#F1F5F9;color:#334155;font-weight:700;font-size:11px;padding:3px 8px;border-radius:6px;flex-shrink:0">3</span><span style="font-size:12px;color:#334155;line-height:1.6">조합함에서 순서 조정 후 <strong>AI 다듬기</strong> 또는 그대로 복사</span></div>'
+      +'</div>'
+      +'<div style="margin-top:20px;font-size:11px;color:#94A3B8">💡 마음에 드는 도입부, 데이터 설명, 마무리 등 원하는 문단만 골라 담아보세요</div>'
+      +'</div>';
+    qs('#sns-preview-modal').querySelector('h3').textContent='🧩 조합함';
+    qs('#sns-preview-modal').classList.remove('hidden');
+    return;
+  }
+
   var html='<div style="text-align:center;margin-bottom:16px"><div style="font-size:14px;font-weight:700;color:#1E293B;margin-bottom:4px">🧩 조합함</div><div style="font-size:12px;color:#64748B">드래그로 순서 변경 · 다 모았으면 AI 다듬기 또는 그대로 복사</div></div>';
 
   /* 문장 목록 */
   html+='<div id="mix-list">';
   snsMixItems.forEach(function(item,idx){
     html+='<div class="mix-item" data-midx="'+idx+'" draggable="true" style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;margin-bottom:6px;background:#fff;border:1.5px solid #E2E8F0;border-radius:10px;cursor:grab;transition:all .15s">'
-      +'<span style="font-size:12px;color:#94A3B8;font-weight:700;flex-shrink:0;margin-top:1px">'+(idx+1)+'</span>'
+      +'<span class="mix-drag-handle" style="color:#CBD5E1;font-size:14px;cursor:grab;flex-shrink:0;margin-top:2px">⋮⋮</span>'
+      +'<span style="font-size:11px;color:#fff;background:#6366F1;font-weight:700;flex-shrink:0;padding:2px 8px;border-radius:6px">'+(idx+1)+'</span>'
       +'<div style="flex:1;font-size:12px;line-height:1.6;color:#334155">'+esc(item.text)+'</div>'
       +'<button class="mix-del" data-mid="'+item.id+'" style="background:none;border:none;color:#ccc;cursor:pointer;font-size:14px;flex-shrink:0;padding:0 2px">✕</button>'
       +'</div>';
@@ -3251,7 +3514,7 @@ function showMixModal(){
   html+='<div style="display:flex;gap:8px;justify-content:center;margin-top:14px;flex-wrap:wrap">'
     +'<button id="mix-ai-polish" class="btn-primary btn-sm" style="padding:10px 24px">✨ AI 다듬기</button>'
     +'<button id="mix-copy-raw" class="btn-primary btn-sm" style="padding:10px 24px;background:#475569">📋 그대로 복사</button>'
-    +'<button id="mix-clear" class="btn-ghost" style="padding:10px 16px">전체 삭제</button>'
+    +'<button id="mix-save" class="btn-primary btn-sm" style="padding:10px 24px;background:#1E293B">🔖 저장</button>'
     +'</div>';
   html+='<div id="mix-ai-result" style="display:none;margin-top:16px"></div>';
 
@@ -3289,11 +3552,15 @@ function showMixModal(){
     else{var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('복사됨!');}
   });
 
-  /* 전체 삭제 */
-  qs('#mix-clear').addEventListener('click',function(){
-    snsMixItems=[];updateMixCount();
-    qs('#sns-preview-modal').classList.add('hidden');
-    toast('조합함 비워짐');
+  /* 저장 */
+  qs('#mix-save').addEventListener('click',function(){
+    var preview=qs('#mix-preview');
+    var t=preview?(preview.innerText||preview.textContent):'';
+    if(!t.trim()){toast('저장할 텍스트가 없어요');return;}
+    snsSaved.unshift({id:Date.now(),platform:snsActivePlatform||'facebook',text:t.trim(),label:'🧩 조합',date:today()});
+    if(snsSaved.length>50)snsSaved=snsSaved.slice(0,50);
+    saveSnsStorage();renderSnsSavedList();renderSidebarSnsSaved();
+    toast('저장 완료!');
   });
 
   /* AI 다듬기 — 내용 유지, 문맥만 자연스럽게 */
@@ -3357,62 +3624,125 @@ function showSnsPreview(platform,text){
   var html='';
 
   if(platform==='facebook'){
-    html='<div style="background:#fff;border-radius:8px;box-shadow:0 1px 2px rgba(0,0,0,.2);max-width:540px;margin:0 auto;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif">'
-      +'<div style="display:flex;align-items:center;gap:10px;padding:12px 16px">'
-      +'<div style="width:40px;height:40px;border-radius:50%;background:#f0f0f0;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden"><span style="font-size:9px;font-weight:800;color:#333">IGAW</span></div>'
-      +'<div style="flex:1"><div style="font-size:14px;font-weight:700;color:#050505">IGAWorks 아이지에이웍스</div><div style="font-size:12px;color:#65676B">5일 · <span style="font-size:11px">🌐</span></div></div>'
+    html='<div style="background:#fff;border-radius:8px;box-shadow:0 1px 2px rgba(0,0,0,.1);max-width:540px;margin:0 auto;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Helvetica,Arial,sans-serif;overflow:hidden">'
+      /* 헤더: 프로필 */
+      +'<div style="display:flex;align-items:center;gap:10px;padding:12px 16px 0">'
+      +'<div style="width:40px;height:40px;border-radius:50%;background:#1A1A2E;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden"><img src="https://igaworksblog.com/wp-content/uploads/2024/01/igaworks-logo-icon.png" style="width:40px;height:40px;border-radius:50%;object-fit:cover" onerror="this.style.display=\'none\';this.parentNode.innerHTML=\'<span style=font-size:10px;font-weight:800;color:#fff;letter-spacing:0.5px>IGAW</span>\'"></div>'
+      +'<div style="flex:1"><div style="font-size:13px;font-weight:600;color:#050505;line-height:1.3">IGAWorks 아이지에이웍스</div><div style="display:flex;align-items:center;gap:4px;margin-top:1px"><span style="font-size:12px;color:#65676B">2시간</span><span style="font-size:12px;color:#65676B">·</span><svg width="12" height="12" viewBox="0 0 16 16" fill="#65676B"><path d="M8 0a8 8 0 108 8A8 8 0 008 0zm0 14.5A6.5 6.5 0 1114.5 8 6.508 6.508 0 018 14.5zM8 4a.75.75 0 00-.75.75v3.5a.75.75 0 00.37.65l2.5 1.5a.75.75 0 10.76-1.3L8.75 7.87V4.75A.75.75 0 008 4z"/></svg></div></div>'
+      +'<div style="cursor:pointer;padding:8px"><svg width="20" height="20" viewBox="0 0 24 24" fill="#65676B"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></div>'
       +'</div>'
-      +'<div style="padding:0 16px 12px;font-size:14px;line-height:1.7;color:#050505;white-space:pre-wrap">'+escaped+'</div>'
-      +'<div style="background:#F0F2F5;border-top:1px solid #E4E6EB;border-bottom:1px solid #E4E6EB;padding:12px 16px">'
-      +'<div style="font-size:10px;color:#65676B;text-transform:uppercase;letter-spacing:0.3px">IGAWORKSBLOG.COM</div>'
-      +'<div style="font-size:15px;font-weight:600;color:#050505;margin-top:4px;line-height:1.3">콘텐츠 제목이 여기에 표시됩니다</div>'
-      +'<div style="font-size:13px;color:#65676B;margin-top:2px">igaworksblog.com</div>'
+      /* 본문 */
+      +'<div style="padding:8px 16px 12px;font-size:15px;line-height:1.65;color:#050505;white-space:pre-wrap;word-break:break-word">'+escaped+'</div>'
+      /* 링크 카드 프리뷰 */
+      +'<div style="border-top:1px solid #E4E6EB">'
+      +'<div style="background:#F8F8F8;height:120px;display:flex;align-items:center;justify-content:center;color:#CBD5E1;font-size:11px;gap:6px;flex-direction:column"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>썸네일</span></div>'
+      +'<div style="background:#F0F2F5;padding:8px 16px 10px;border-bottom:1px solid #E4E6EB">'
+      +'<div style="font-size:11px;color:#65676B;text-transform:uppercase;letter-spacing:0.3px">IGAWORKSBLOG.COM</div>'
+      +'<div style="font-size:14px;font-weight:600;color:#050505;margin-top:2px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden">콘텐츠 제목</div>'
+      +'</div></div>'
+      /* 게시물 홍보하기 바 */
+      +'<div style="display:flex;align-items:center;padding:10px 16px;gap:8px;border-bottom:1px solid #E4E6EB">'
+      +'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#65676B" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2L15 22l-4-9-9-4z"/></svg>'
+      +'<span style="font-size:13px;color:#65676B;flex:1">게시물을 홍보하여 <b style="color:#050505">IGAWorks 아이지에이웍스</b>의 도달 범위를 늘려보세요.</span>'
+      +'<span style="background:#1877F2;color:#fff;font-size:13px;font-weight:600;padding:8px 16px;border-radius:6px;white-space:nowrap">게시물 홍보하기</span>'
       +'</div>'
-      +'<div style="padding:8px 16px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid #E4E6EB">'
-      +'<div style="display:flex;gap:16px">'
-      +'<span style="font-size:14px;color:#65676B;cursor:default">👍 추천</span>'
-      +'<span style="font-size:14px;color:#65676B;cursor:default">💬 댓글</span>'
-      +'<span style="font-size:14px;color:#65676B;cursor:default">↗ 퍼가기</span>'
+      /* 리액션 & 액션 바 */
+      +'<div style="display:flex;align-items:center;padding:8px 16px;gap:6px">'
+      +'<span style="display:flex;align-items:center"><span style="width:20px;height:20px;border-radius:50%;background:#1877F2;display:inline-flex;align-items:center;justify-content:center;font-size:11px">👍</span><span style="width:20px;height:20px;border-radius:50%;background:#F0932B;display:inline-flex;align-items:center;justify-content:center;font-size:11px;margin-left:-4px">😮</span></span>'
+      +'<span style="font-size:13px;color:#65676B;margin-left:4px">1</span>'
       +'</div>'
+      +'<div style="border-top:1px solid #E4E6EB;display:flex;padding:4px 16px">'
+      +'<div style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:8px 0;cursor:default;border-radius:4px;transition:background .15s"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#65676B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 00-6 0v1"/><path d="M18 14v-3a2 2 0 00-2-2H4a2 2 0 00-2 2v7a2 2 0 002 2h12a2 2 0 002-2z"/></svg><span style="font-size:14px;font-weight:600;color:#65676B">좋아요</span></div>'
+      +'<div style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:8px 0;cursor:default;border-radius:4px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#65676B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><span style="font-size:14px;font-weight:600;color:#65676B">댓글 달기</span></div>'
+      +'<div style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:8px 0;cursor:default;border-radius:4px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#65676B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg><span style="font-size:14px;font-weight:600;color:#65676B">공유하기</span></div>'
       +'</div></div>';
+
   } else if(platform==='linkedin'){
-    html='<div style="background:#fff;border-radius:8px;border:1px solid #E0E0E0;max-width:540px;margin:0 auto;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif">'
-      +'<div style="display:flex;align-items:flex-start;gap:10px;padding:12px 16px">'
-      +'<div style="width:48px;height:48px;border-radius:50%;background:#f0f0f0;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden"><span style="font-size:9px;font-weight:800;color:#333">IGAW</span></div>'
-      +'<div style="flex:1"><div style="font-size:14px;font-weight:700;color:#000">IGAWorks 아이지에이웍스</div><div style="font-size:12px;color:#666;line-height:1.3">팔로워 1,019명</div><div style="font-size:12px;color:#999">4시간 · <span style="font-size:11px">🌐</span></div></div>'
+    html='<div style="background:#fff;border-radius:8px;border:1px solid #E0DFDC;max-width:540px;margin:0 auto;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif;overflow:hidden">'
+      /* 헤더 */
+      +'<div style="display:flex;align-items:flex-start;gap:8px;padding:12px 16px 0">'
+      +'<div style="width:48px;height:48px;border-radius:50%;background:#1A1A2E;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden"><img src="https://igaworksblog.com/wp-content/uploads/2024/01/igaworks-logo-icon.png" style="width:48px;height:48px;border-radius:50%;object-fit:cover" onerror="this.style.display=\'none\';this.parentNode.innerHTML=\'<span style=font-size:11px;font-weight:800;color:#fff;letter-spacing:0.5px>IGAW</span>\'"></div>'
+      +'<div style="flex:1;min-width:0">'
+      +'<div style="font-size:14px;font-weight:600;color:#000;line-height:1.3">IGAWorks 아이지에이웍스</div>'
+      +'<div style="font-size:12px;color:#666;line-height:1.4">팔로워 1,019명</div>'
+      +'<div style="display:flex;align-items:center;gap:4px;margin-top:1px"><span style="font-size:12px;color:#999">3주</span><span style="font-size:12px;color:#999">·</span><span style="font-size:12px;color:#999">수정됨</span><span style="font-size:12px;color:#999">·</span><svg width="14" height="14" viewBox="0 0 16 16" fill="#999"><path d="M8 1a7 7 0 107 7 7 7 0 00-7-7zM3 8a5 5 0 011.54-3.61l.71.71A4 4 0 004 8a3.92 3.92 0 001.25 2.9l-.71.71A5 5 0 013 8zm5 5a5 5 0 01-3.61-1.54l.71-.71A4 4 0 008 12a3.92 3.92 0 002.9-1.25l.71.71A5 5 0 018 13zm3.61-1.54l-.71-.71A4 4 0 0012 8a3.92 3.92 0 00-1.25-2.9l.71-.71A5 5 0 0113 8a5 5 0 01-1.39 3.46z"/></svg></div>'
       +'</div>'
-      +'<div style="padding:0 16px 14px;font-size:14px;line-height:1.7;color:#191919;white-space:pre-wrap">'+escaped+'</div>'
-      +'<div style="padding:0 16px 8px;display:flex;gap:4px;align-items:center"><span style="font-size:11px">👍❤️</span><span style="font-size:12px;color:#666">42</span></div>'
-      +'<div style="border-top:1px solid #E0E0E0;padding:0 16px">'
-      +'<div style="display:flex;justify-content:space-around;padding:8px 0">'
-      +'<span style="font-size:13px;color:#666;cursor:default">👍 추천</span>'
-      +'<span style="font-size:13px;color:#666;cursor:default">🗨 댓글</span>'
-      +'<span style="font-size:13px;color:#666;cursor:default">🔄 퍼가기</span>'
-      +'</div></div></div>';
+      +'</div>'
+      /* 본문 */
+      +'<div style="padding:8px 16px 12px;font-size:14px;line-height:1.65;color:#191919;white-space:pre-wrap;word-break:break-word">'+escaped+'</div>'
+      /* 링크 카드 */
+      +'<div style="margin:0 16px 12px;border:1px solid #E0DFDC;border-radius:2px;overflow:hidden">'
+      +'<div style="background:#F8F8F8;height:100px;display:flex;align-items:center;justify-content:center;color:#CBD5E1;font-size:11px;gap:6px;flex-direction:column"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>썸네일</span></div>'
+      +'<div style="background:#EDF3F8;padding:8px 12px">'
+      +'<div style="font-size:13px;font-weight:600;color:#000;line-height:1.3">콘텐츠 제목</div>'
+      +'<div style="font-size:12px;color:#666;margin-top:2px">igaworksblog.com</div>'
+      +'</div></div>'
+      /* 리액션 */
+      +'<div style="display:flex;align-items:center;padding:0 16px 8px;gap:4px">'
+      +'<span style="display:flex;align-items:center"><span style="width:18px;height:18px;border-radius:50%;background:#378FE9;display:inline-flex;align-items:center;justify-content:center;font-size:10px;border:2px solid #fff">👍</span><span style="width:18px;height:18px;border-radius:50%;background:#DF704D;display:inline-flex;align-items:center;justify-content:center;font-size:10px;margin-left:-4px;border:2px solid #fff">❤️</span></span>'
+      +'<span style="font-size:12px;color:#666;margin-left:2px">2</span>'
+      +'</div>'
+      /* 구분선 + 액션 바 */
+      +'<div style="border-top:1px solid #E0DFDC;display:flex;padding:4px 8px;margin:0 8px">'
+      +'<div style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 0;cursor:default;border-radius:4px">'
+      +'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="1.5"><path d="M7 22V11l-5 2V8l7-6h2l7 6v5l-5-2v11"/></svg>'
+      +'<span style="font-size:13px;font-weight:600;color:#666">추천</span></div>'
+      +'<div style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 0;cursor:default;border-radius:4px">'
+      +'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>'
+      +'<span style="font-size:13px;font-weight:600;color:#666">댓글</span></div>'
+      +'<div style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 0;cursor:default;border-radius:4px">'
+      +'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>'
+      +'<span style="font-size:13px;font-weight:600;color:#666">퍼가기</span></div>'
+      +'</div>'
+      /* 하단 프로필 바 */
+      +'<div style="border-top:1px solid #E0DFDC;display:flex;align-items:center;gap:8px;padding:8px 16px">'
+      +'<div style="width:24px;height:24px;border-radius:50%;background:#1A1A2E;flex-shrink:0"></div>'
+      +'<div style="flex:1;background:#EDF3F8;border:1px solid #C8D6E0;border-radius:20px;padding:6px 12px;font-size:12px;color:#999">댓글 추가...</div>'
+      +'</div>'
+      +'</div>';
+
   } else if(platform==='instagram'){
-    html='<div style="background:#fff;border:1px solid #DBDBDB;border-radius:8px;max-width:400px;margin:0 auto;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif">'
-      +'<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid #EFEFEF">'
-      +'<div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);display:flex;align-items:center;justify-content:center;flex-shrink:0"><div style="width:28px;height:28px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center"><div style="width:26px;height:26px;border-radius:50%;background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#333">IGAW</div></div></div>'
-      +'<div style="font-size:13px;font-weight:600;color:#262626">igaworks_official</div>'
+    html='<div style="background:#fff;border:1px solid #DBDBDB;border-radius:3px;max-width:470px;margin:0 auto;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,Helvetica,Arial,sans-serif;overflow:hidden">'
+      /* 헤더 */
+      +'<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid #EFEFEF">'
+      +'<div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:2px"><div style="width:28px;height:28px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;padding:1px"><div style="width:26px;height:26px;border-radius:50%;background:#1A1A2E;display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:800;color:#fff;letter-spacing:0.3px">IGAW</div></div></div>'
+      +'<div style="flex:1;font-size:14px;font-weight:600;color:#262626">igaworks_official</div>'
+      +'<svg width="20" height="20" viewBox="0 0 24 24" fill="#262626"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>'
       +'</div>'
-      +'<div style="background:#F8F8F8;padding:60px 20px;text-align:center;font-size:11px;color:#999;border-bottom:1px solid #EFEFEF">이미지 영역</div>'
-      +'<div style="padding:10px 14px 4px;display:flex;gap:14px">'
-      +'<span style="font-size:22px;cursor:default">♡</span>'
-      +'<span style="font-size:22px;cursor:default">💬</span>'
-      +'<span style="font-size:22px;cursor:default">📤</span>'
+      /* 이미지 영역 */
+      +'<div style="background:#F8F8F8;height:200px;display:flex;align-items:center;justify-content:center;color:#CBD5E1;font-size:12px;gap:6px;flex-direction:column"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>썸네일</span></div>'
+      /* 액션 아이콘 */
+      +'<div style="display:flex;align-items:center;padding:10px 12px 6px">'
+      +'<div style="display:flex;gap:14px;flex:1">'
+      +'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#262626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>'
+      +'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#262626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>'
+      +'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#262626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>'
       +'</div>'
-      +'<div style="padding:4px 14px 12px;font-size:13px;line-height:1.5;color:#262626;white-space:pre-wrap"><span style="font-weight:600">igaworks_official</span> '+escaped+'</div>'
-      +'<div style="padding:0 14px 12px;font-size:11px;color:#999">4시간 전</div>'
+      +'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#262626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>'
+      +'</div>'
+      /* 좋아요 수 */
+      +'<div style="padding:0 12px 6px;font-size:14px;font-weight:600;color:#262626">좋아요 42개</div>'
+      /* 본문 */
+      +'<div style="padding:0 12px 8px;font-size:14px;line-height:1.5;color:#262626;white-space:pre-wrap;word-break:break-word"><span style="font-weight:600">igaworks_official</span> '+escaped+'</div>'
+      /* 시간 */
+      +'<div style="padding:0 12px 12px;font-size:10px;color:#999;text-transform:uppercase;letter-spacing:0.2px">2시간 전</div>'
+      /* 댓글 입력 */
+      +'<div style="border-top:1px solid #EFEFEF;display:flex;align-items:center;padding:10px 12px;gap:10px">'
+      +'<span style="font-size:22px">😊</span>'
+      +'<span style="flex:1;font-size:14px;color:#999">댓글 달기...</span>'
+      +'<span style="font-size:14px;font-weight:600;color:#B3DFFC">게시</span>'
+      +'</div>'
       +'</div>';
   }
 
   body.innerHTML=html;
-  body.style.background=(platform==='instagram')?'#FAFAFA':'#F0F2F5';
+  body.style.background='#F0F2F5';
   qs('#sns-preview-modal').querySelector('h3').textContent='SNS 미리보기';
   qs('#sns-preview-modal').classList.remove('hidden');
 }
 
-qs('#sns-preview-close').addEventListener('click',function(){
+
+on('#sns-preview-close','click',function(){
   qs('#sns-preview-modal').classList.add('hidden');
 });
 
@@ -3429,23 +3759,29 @@ function regenSingleCandidate(platform,idx,tone){
   var parts=tone.split('+');
   var guides=[];
   parts.forEach(function(t){
-    if(t==='casual')guides.push('캐주얼하고 친근하게. 이모지 활용. 딱딱한 표현 제거.');
-    else if(t==='professional')guides.push('전문적이고 격식있게. 이모지 최소화. 비즈니스 용어 활용.');
-    else if(t==='hooking')guides.push('첫 문장에서 강렬하게 후킹. 충격적인 수치나 반전, 질문으로 시작.');
-    else if(t==='data')guides.push('수치와 데이터를 전면에. 구체적인 숫자, 퍼센트, 비교 수치로 설득력 있게.');
-    else if(t==='story')guides.push('스토리텔링 방식. 상황 묘사 → 문제 → 해결 흐름으로 자연스럽게.');
-    else if(t==='question')guides.push('질문형. 독자에게 질문을 던지며 시작, 궁금증 유발 구조.');
-    else if(t==='problem')guides.push('문제의식 강하게 제기. 업계 pain point나 변화를 짚고 중요성 강조.');
-    else if(t==='reversal')guides.push('반전 포인트. 예상과 다른 결과나 의외의 사실로 시작해서 흥미 유발.');
+    if(t==='casual')guides.push('현재 톤을 유지하되 조금 더 부드럽고 읽기 편하게. 과도한 이모지나 구어체는 피하고 자연스러운 친근함 정도로.');
+    else if(t==='professional')guides.push('현재 구조를 유지하되 톤만 조금 더 격식있게. 줄글로 바꾸지 말고 기존 불릿/구조는 그대로 유지.');
+    else if(t==='hooking')guides.push('첫 문장만 더 임팩트 있게 바꿔. 나머지 구조와 톤은 기존과 비슷하게 유지.');
+    else if(t==='data')guides.push('기존 구조 유지하면서 수치와 데이터를 좀 더 전면에 배치. 전체 톤은 크게 바꾸지 마.');
+    else if(t==='story')guides.push('기존 내용을 스토리텔링 흐름으로 살짝 재배치. 상황→발견→인사이트 순서로. 톤은 유지.');
+    else if(t==='question')guides.push('도입부를 질문형으로 바꿔. 나머지 구조와 톤은 기존과 비슷하게.');
+    else if(t==='problem')guides.push('도입부에서 문제의식을 좀 더 강조. 나머지는 기존 구조 유지.');
+    else if(t==='reversal')guides.push('도입부에 의외의 사실이나 반전 포인트를 배치. 나머지는 기존 톤 유지.');
   });
   toneGuide=guides.length>0?guides.join(' 그리고 '):'다른 각도와 어조로 완전히 새롭게 작성.';
 
+  var charLimit={facebook:750,linkedin:500,instagram:350};
+  var limitGuide=charLimit[platform]?'★ '+charLimit[platform]+'자 이내 필수!\n':'';
+
   var sysPrompt='당신은 SNS 마케팅 전문가입니다. 아래 텍스트를 같은 플랫폼('+platform+')용으로 다시 작성해주세요.\n\n'
     +'★ '+toneGuide+'\n'
+    +limitGuide
     +'★ 마크다운(**, * 등) 절대 사용 금지\n'
     +'★ label(특징 2~4자)과 text를 JSON으로 출력\n'
-    +'★ 기존 내용의 핵심 메시지는 유지하되 표현과 구조를 바꿔\n\n'
-    +'출력: {"label":"특징","text":"새 텍스트"}\n'
+    +'★ 기존 내용의 핵심 메시지는 유지하되 표현과 구조를 바꿔\n'
+    +'★ 단락과 단락 사이에 반드시 빈 줄(\\n\\n)을 넣어서 가독성 높게 작성\n'
+    +(platform==='instagram'?'★ 마지막 문장은 반드시: "지금 바로 프로필 상단 링크 (📊아이지에이웍스 블로그)를 통해 확인해 보세요!" 로 끝낼 것\n★ 이모지 반드시 2개 사용\n':'')
+    +'\n출력: {"label":"특징","text":"새 텍스트"}\n'
     +'JSON만 출력. 설명 없이.';
 
   var userMsg='기존 텍스트:\n'+currentText;
@@ -3460,16 +3796,25 @@ function regenSingleCandidate(platform,idx,tone){
     method:'POST',headers:{'Content-Type':'application/json'},body:reqBody
   }).then(function(r){return r.json();}).then(function(d){
     var c=d.candidates&&d.candidates[0];
-    if(!c||!c.content||!c.content.parts)throw new Error('AI 응답 오류');
+    if(!c||!c.content||!c.content.parts){
+      /* finishReason 확인 */
+      var reason=c&&c.finishReason?c.finishReason:'UNKNOWN';
+      console.warn('regenSingleCandidate: no content, reason:',reason);
+      throw new Error('AI 응답 오류 ('+reason+')');
+    }
     var txt='';
     for(var i=0;i<c.content.parts.length;i++){if(c.content.parts[i].text)txt+=c.content.parts[i].text;}
     var jsonStr=null;
     var cb=txt.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
     if(cb)jsonStr=cb[1].trim();
     if(!jsonStr){var s=txt.indexOf('{'),e=txt.lastIndexOf('}');if(s!==-1&&e>s)jsonStr=txt.substring(s,e+1);}
-    if(!jsonStr)throw new Error('파싱 실패');
-    var result=JSON.parse(jsonStr);
-    return result;
+    if(jsonStr){
+      try{return JSON.parse(jsonStr);}catch(pe){console.warn('JSON parse failed, using raw text');}
+    }
+    /* JSON 파싱 실패 시 텍스트 자체를 반환 */
+    var cleanTxt=txt.replace(/```[\s\S]*?```/g,'').replace(/\{[\s\S]*\}/,'').trim();
+    if(!cleanTxt)cleanTxt=txt;
+    return{label:'재생성',text:cleanTxt};
   });
 }
 
