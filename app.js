@@ -535,7 +535,15 @@ function aiRewrite(paras,title,volumeText,writeStyle,url,totalUrls){
   var styleHint=writeStyle==='prose'?'줄글(산문) 형식으로 작성해주세요. 이모지 소제목 금지.':'소제목+이모지 형식으로 작성해주세요.';
   /* URL이 있으면 Gemini가 직접 읽도록 URL만 전달, 없으면 파싱 텍스트 fallback */
   var userMsg=url
-    ?'다음 URL의 원문을 직접 읽고 뉴스레터를 작성해주세요.\nURL: '+url+'\n작성 형식: '+styleHint+'\n\n★ 앞쪽 본문에서 핵심 수치를 구체적으로 언급하고, 뒤쪽으로 갈수록 궁금증을 남겨서 원문 클릭을 유도하세요.'+volInstruction
+    ?(function(){
+        /* URL이 있어도 프록시 파싱 텍스트를 함께 전달 — Gemini 캐시 방지 */
+        var orig=paras.map(function(p){return(p.isH?'## ':'')+p.text;}).join('\n\n');
+        if(orig.length>15000)orig=orig.substring(0,15000)+'\n\n[... 원문 일부 생략 ...]';
+        var proxyNote=orig.length>50
+          ?'\n\n---\n★ 아래는 지금 이 순간 직접 크롤링한 최신 본문입니다. URL 캐시가 아닌 이 텍스트가 최신 원문이므로 반드시 이 내용을 기준으로 작성하세요.\n\n원문 제목: '+title+'\n\n'+orig+'\n---'
+          :'';
+        return '다음 URL의 원문을 직접 읽고 뉴스레터를 작성해주세요.\nURL: '+url+'\n작성 형식: '+styleHint+proxyNote+'\n\n★ 앞쪽 본문에서 핵심 수치를 구체적으로 언급하고, 뒤쪽으로 갈수록 궁금증을 남겨서 원문 클릭을 유도하세요.'+volInstruction;
+      })()
     :(function(){
         var orig=paras.map(function(p){return(p.isH?'## ':'')+p.text;}).join('\n\n');
         if(orig.length>15000)orig=orig.substring(0,15000)+'\n\n[... 원문 일부 생략 ...]';
@@ -2866,10 +2874,16 @@ function snsGenerate(urls){
   var key=getKey();
   if(!key)return Promise.reject(new Error('NO_KEY'));
 
-  /* URL당 프롬프트 구성 */
+  /* URL당 프롬프트 구성 — 프록시 파싱 텍스트 포함해 캐시 방지 */
   var urlLines=urls.map(function(u,i){
-    return (i+1)+'. URL: '+u.url+'\n   솔루션: '+u.tag+'\n   인스타그램 프로필 링크: '+getInstaLink(u.tag);
-  }).join('\n\n');
+    var base=(i+1)+'. URL: '+u.url+'\n   솔루션: '+u.tag+'\n   인스타그램 프로필 링크: '+getInstaLink(u.tag);
+    if(u.paras&&u.paras.length>0){
+      var orig=u.paras.map(function(p){return(p.isH?'## ':'')+p.text;}).join('\n\n');
+      if(orig.length>8000)orig=orig.substring(0,8000)+'\n\n[... 원문 일부 생략 ...]';
+      base+='\n   ★ 아래는 지금 직접 크롤링한 최신 본문입니다. URL 캐시가 아닌 이 텍스트를 기준으로 작성하세요:\n'+orig;
+    }
+    return base;
+  }).join('\n\n---\n\n');
 
   var sysPrompt=[
     '당신은 B2B 마케팅 콘텐츠 전문가입니다. 주어진 URL들의 콘텐츠를 분석하여 각 SNS 플랫폼에 최적화된 공유 텍스트를 작성합니다.',
@@ -2980,7 +2994,7 @@ on('#sns-generate-btn','click',function(){
     var tagVal=tagEl?tagEl.value:'auto';
     if(urlVal){
       var detectedTag=(tagVal==='auto')?classify(urlVal):tagVal;
-      urls.push({url:urlVal,tag:detectedTag});
+      urls.push({url:urlVal,tag:detectedTag,paras:[],title:''});
     }
   });
   if(urls.length===0){toast('URL을 입력하세요');return;}
@@ -2989,7 +3003,19 @@ on('#sns-generate-btn','click',function(){
   qs('#sns-error-msg').classList.add('hidden');
   qs('#sns-generate-btn').disabled=true;
 
-  snsGenerate(urls).then(function(result){
+  /* 각 URL 프록시 파싱 후 snsGenerate 호출 */
+  var parseChain=Promise.resolve();
+  urls.forEach(function(item){
+    parseChain=parseChain.then(function(){
+      return fetchUrl(item.url).then(function(html){
+        var data=extract(html,item.url);
+        item.paras=data.paras||[];
+        item.title=data.title||'';
+      }).catch(function(){/* 파싱 실패 시 빈 paras로 진행 */});
+    });
+  });
+
+  parseChain.then(function(){return snsGenerate(urls);}).then(function(result){
     snsCandidates=result;
     snsLastUrls=urls;
     snsActivePlatform='facebook';
