@@ -750,15 +750,19 @@ function buildNL(sections){
 
   /* 이번 주 주요 인사이트 목차 — div 기반 (편집 가능) */
   S+='<div>';
-  S+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px"><div style="width:3px;height:18px;background:#3B48CC;border-radius:2px;flex-shrink:0"></div><div style="font-size:14px;font-weight:800;color:#111">이번 주 주요 인사이트</div></div>';
+  /* 이메일 호환: display:table 사용 (flex 대신) */
+  S+='<div style="display:table;width:100%;border-collapse:collapse;margin-bottom:14px">';
+  S+='<div style="display:table-cell;vertical-align:middle;width:3px;padding-right:8px"><div style="width:3px;height:18px;background:#3B48CC;border-radius:2px"></div></div>';
+  S+='<div style="display:table-cell;vertical-align:middle;font-size:14px;font-weight:800;color:#111">이번 주 주요 인사이트</div>';
+  S+='</div>';
   /* 같은 태그 중복 제거 — 태그별로 첫 번째 제목만 표시 */
   for(var ti=0;ti<sections.length;ti++){
     var tocTag=sections[ti].tag;
     /* TOC 제목은 간략하게: 소제목 우선, 없으면 제목의 첫 줄만 */
     var tocTitle=sections[ti].ai.subtitle||sections[ti].ai.oneliner||(sections[ti].ai.title||'').split(/<br\s*\/?>/i)[0]||sections[ti].data.title;
-    S+='<div data-toc-idx="'+ti+'" style="display:flex;align-items:center;gap:10px;padding:10px 14px;margin-bottom:4px;border:1px solid #D5D2CA;border-radius:6px">';
-    S+='<span style="font-size:11px;font-weight:700;color:#fff;background:#3B48CC;padding:3px 10px;border-radius:4px;white-space:nowrap;flex-shrink:0">'+esc(tocTag)+'</span>';
-    S+='<span style="font-size:13px;color:#333;line-height:1.5;word-break:keep-all">'+cleanBr(tocTitle)+'</span>';
+    S+='<div data-toc-idx="'+ti+'" style="display:table;width:100%;border-collapse:collapse;padding:10px 14px;margin-bottom:4px;border:1px solid #D5D2CA;border-radius:6px;box-sizing:border-box">';
+    S+='<span style="display:table-cell;vertical-align:middle;font-size:11px;font-weight:700;color:#fff;background:#3B48CC;padding:3px 10px;border-radius:4px;white-space:nowrap;width:1%">'+esc(tocTag)+'</span>';
+    S+='<span style="display:table-cell;vertical-align:middle;font-size:13px;color:#333;line-height:1.5;word-break:keep-all;padding-left:10px">'+cleanBr(tocTitle)+'</span>';
     S+='</div>';
   }
 
@@ -1213,11 +1217,26 @@ function stibeeHTML(){
   var nlLH=NL.style.lineHeight||'1.8';
   var nlLS=NL.style.letterSpacing||'-0.27px';
   var nlFS=NL.style.fontSize||'16px';
+  var nlFF='Noto Sans KR,Pretendard,Apple SD Gothic Neo,sans-serif';
+  /* 이메일 클라이언트는 CSS 상속 미지원 → 텍스트 요소에 직접 주입 */
+  clone.querySelectorAll('p,div,span,td,li,h1,h2,h3,h4,h5,h6').forEach(function(el){
+    /* letter-spacing: 명시적으로 다른 값이 없으면 기본값 적용 */
+    if(!el.style.letterSpacing||el.style.letterSpacing==='normal'||el.style.letterSpacing==='0px')
+      el.style.letterSpacing=nlLS;
+    if(!el.style.lineHeight||el.style.lineHeight==='normal')
+      el.style.lineHeight=nlLH;
+    if(!el.style.fontFamily)
+      el.style.fontFamily=nlFF;
+  });
+  /* position:relative 잔류 스타일 제거 (showControls 흔적) */
+  clone.querySelectorAll('[style*="position:relative"]').forEach(function(el){
+    el.style.position='';
+  });
   var inner=clone.innerHTML;
   /* HTML 크기 체크 */
   var sizeKB=Math.round(inner.length/1024);
   if(sizeKB>90)toast('⚠️ HTML '+sizeKB+'KB — Gmail은 102KB 넘으면 잘려요!');
-  return'<div style="font-family:Noto Sans KR,Pretendard,Apple SD Gothic Neo,sans-serif;letter-spacing:'+nlLS+';line-height:'+nlLH+';font-size:'+nlFS+';color:'+nlColor+';max-width:600px;margin:0 auto;background:#fff;padding:40px 24px;width:100%;box-sizing:border-box">'+inner+'</div>';
+  return'<div style="font-family:'+nlFF+';letter-spacing:'+nlLS+';line-height:'+nlLH+';font-size:'+nlFS+';color:'+nlColor+';max-width:600px;margin:0 auto;background:#fff;padding:40px 24px;width:100%;box-sizing:border-box">'+inner+'</div>';
 }
 on('#copy-html-btn','click',function(){
   var html=stibeeHTML();
