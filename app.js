@@ -1175,6 +1175,7 @@ function syncToolbar(){
 /* ===== Stibee Export ===== */
 function stibeeHTML(){
   var clone=NL.cloneNode(true);
+  clone.querySelectorAll('[data-ui-ctrl]').forEach(function(el){el.remove();});
   clone.querySelectorAll('[data-src-idx]').forEach(function(el){el.removeAttribute('data-src-idx');});
   clone.querySelectorAll('[data-el]').forEach(function(el){el.removeAttribute('data-el');});
   clone.querySelectorAll('[contenteditable]').forEach(function(el){el.removeAttribute('contenteditable');});
@@ -2077,6 +2078,7 @@ NL.addEventListener('click',function checkBoxSelect(e){
 (function(){
   var ctrlWrap=document.createElement('div');
   ctrlWrap.style.cssText='position:absolute;top:-30px;right:0;display:flex;gap:3px;z-index:50;opacity:0;transition:opacity .12s;pointer-events:auto';
+  ctrlWrap.setAttribute('data-ui-ctrl','1');
   ctrlWrap.innerHTML='<button class="block-ctrl-btn" data-bc="up" title="위로">▲</button>'
     +'<button class="block-ctrl-btn" data-bc="down" title="아래로">▼</button>'
     +'<button class="block-ctrl-btn" data-bc="copy" title="복사">❐</button>'
