@@ -1193,7 +1193,30 @@ function stibeeHTML(){
     if(!img.style.height||img.style.height==='auto')img.style.height='auto';
   });
   if(hasBase64)toast('⚠️ base64 이미지는 제거됐어요. 파일 업로드 시 자동 URL 변환을 이용하세요.');
-  if(hasBadUrl)toast('⚠️ ibb.co 페이지 링크가 있어요. 이미지가 안 보일 수 있어요. i.ibb.co 직접 링크를 사용하세요.');
+  if(hasBadUrl)toast('⚠️ ibb.co 페이지 링크가 있어요. i.ibb.co 직접 링크를 사용하세요.');
+
+  /* ===== 이메일 호환성 처리 ===== */
+  /* 1. position:absolute 빈 div 제거 (블록 컨트롤 잔해) */
+  clone.querySelectorAll('div').forEach(function(el){
+    if(el.style.position==='absolute'||el.style.position==='fixed'){el.remove();}
+  });
+  /* 2. display:flex → table 변환 (Gmail/Outlook 호환) */
+  clone.querySelectorAll('*').forEach(function(el){
+    if(el.style.display==='flex'){
+      el.style.display='table';el.style.width='100%';
+      Array.from(el.children).forEach(function(child){
+        child.style.display='table-cell';child.style.verticalAlign='middle';
+      });
+    }
+  });
+  /* 3. gap 속성 제거 (이메일에서 미지원) */
+  clone.querySelectorAll('*').forEach(function(el){
+    if(el.style.gap)el.style.gap='';
+  });
+  /* 4. 빈 a 태그 제거 */
+  clone.querySelectorAll('a').forEach(function(el){
+    if(!el.textContent.trim()&&!el.querySelector('img'))el.remove();
+  });
   /* 불필요한 속성 정리 (HTML 크기 줄이기) */
   clone.querySelectorAll('[class]').forEach(function(el){el.removeAttribute('class');});
   clone.querySelectorAll('[tabindex]').forEach(function(el){el.removeAttribute('tabindex');});
