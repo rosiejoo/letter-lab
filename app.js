@@ -967,12 +967,12 @@ function buildNL(sections){
         }
       }
       if(subTitle){
-        S+='<div data-src-idx="s'+si+'b'+bi+'" style="margin:0 0 20px">';
-        S+='<div style="font-size:18px;font-weight:700;color:#111;margin-bottom:4px;'+ff+'">'+esc(subTitle)+'</div>';
+        S+='<div data-src-idx="s'+si+'b'+bi+'" style="margin:0 0 8px">';
+        S+='<div style="font-size:18px;font-weight:700;color:#111;margin-bottom:2px;'+ff+'">'+esc(subTitle)+'</div>';
         if(bodyContent)S+='<p style="color:#222;margin:0;font-size:16px;line-height:1.8">'+bodyContent+'</p>';
         S+='</div>';
       } else {
-        S+='<p data-src-idx="s'+si+'b'+bi+'" style="color:#222;margin:0 0 20px;font-size:16px;line-height:1.8">'+bodyText+'</p>';
+        S+='<p data-src-idx="s'+si+'b'+bi+'" style="color:#222;margin:0 0 10px;font-size:16px;line-height:1.8">'+bodyText+'</p>';
       }
       } /* end isProse else */
     }
