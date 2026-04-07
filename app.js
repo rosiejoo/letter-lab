@@ -539,10 +539,14 @@ function aiRewrite(paras,title,volumeText,writeStyle,url,totalUrls){
         /* URL이 있어도 프록시 파싱 텍스트를 함께 전달 — Gemini 캐시 방지 */
         var orig=paras.map(function(p){return(p.isH?'## ':'')+p.text;}).join('\n\n');
         if(orig.length>15000)orig=orig.substring(0,15000)+'\n\n[... 원문 일부 생략 ...]';
-        var proxyNote=orig.length>50
-          ?'\n\n---\n★ 아래는 지금 이 순간 직접 크롤링한 최신 본문입니다. URL 캐시가 아닌 이 텍스트가 최신 원문이므로 반드시 이 내용을 기준으로 작성하세요.\n\n원문 제목: '+title+'\n\n'+orig+'\n---'
+        var hasProxy=orig.length>50;
+        var proxyNote=hasProxy
+          ?'\n\n---\n★ 아래는 지금 이 순간 직접 크롤링한 최신 본문입니다. 반드시 이 텍스트를 기준으로 작성하세요.\n\n원문 제목: '+title+'\n원문 URL: '+url+'\n\n'+orig+'\n---'
           :'';
-        return '다음 URL의 원문을 직접 읽고 뉴스레터를 작성해주세요.\nURL: '+url+'\n작성 형식: '+styleHint+proxyNote+'\n\n★ 앞쪽 본문에서 핵심 수치를 구체적으로 언급하고, 뒤쪽으로 갈수록 궁금증을 남겨서 원문 클릭을 유도하세요.'+volInstruction;
+        /* 프록시 성공 시 urlContext 불필요 — 캐시 방지 */
+        if(hasProxy)urlTools=[];
+        return (hasProxy?'아래 제공된 원문을 기반으로 뉴스레터를 작성해주세요.':'다음 URL의 원문을 직접 읽고 뉴스레터를 작성해주세요.\nURL: '+url)
+          +'\n작성 형식: '+styleHint+proxyNote+'\n\n★ 앞쪽 본문에서 핵심 수치를 구체적으로 언급하고, 뒤쪽으로 갈수록 궁금증을 남겨서 원문 클릭을 유도하세요.'+volInstruction;
       })()
     :(function(){
         var orig=paras.map(function(p){return(p.isH?'## ':'')+p.text;}).join('\n\n');
@@ -2937,13 +2941,18 @@ function snsGenerate(urls){
     '3개 후보가 서로 확실히 다른 각도/어조여야 해. URL 콘텐츠를 직접 읽어서 실제 내용 기반으로 작성. ★ 반드시 플랫폼당 정확히 3개만! 4개 이상 절대 금지.'
   ].join('\n');
 
-  var userMsg='다음 URL들의 콘텐츠를 분석하여 SNS 공유 텍스트를 생성해주세요:\n\n'+urlLines;
+  /* 프록시 파싱 성공한 URL이 하나라도 있으면 urlContext 불필요 — 캐시 방지 */
+  var hasAnyProxy=urls.some(function(u){return u.paras&&u.paras.length>0;});
+  var userMsg=(hasAnyProxy
+    ?'아래 제공된 최신 원문을 기반으로 SNS 공유 텍스트를 생성해주세요:'
+    :'다음 URL들의 콘텐츠를 분석하여 SNS 공유 텍스트를 생성해주세요:'
+  )+'\n\n'+urlLines;
 
   var body=JSON.stringify({
     system_instruction:{parts:[{text:sysPrompt}]},
     contents:[{parts:[{text:userMsg}]}],
     generationConfig:{temperature:0.8,maxOutputTokens:32768},
-    tools:[{"urlContext":{}}]
+    tools:hasAnyProxy?[]:[{"urlContext":{}}]
   });
 
   return fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key='+key,{
