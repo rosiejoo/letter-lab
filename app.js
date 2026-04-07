@@ -534,28 +534,23 @@ function aiRewrite(paras,title,volumeText,writeStyle,url,totalUrls){
   }
   var styleHint=writeStyle==='prose'?'줄글(산문) 형식으로 작성해주세요. 이모지 소제목 금지.':'소제목+이모지 형식으로 작성해주세요.';
   /* URL이 있으면 Gemini가 직접 읽도록 URL만 전달, 없으면 파싱 텍스트 fallback */
-  var userMsg=url
-    ?(function(){
-        /* URL이 있어도 프록시 파싱 텍스트를 함께 전달 — Gemini 캐시 방지 */
-        var orig=paras.map(function(p){return(p.isH?'## ':'')+p.text;}).join('\n\n');
-        if(orig.length>15000)orig=orig.substring(0,15000)+'\n\n[... 원문 일부 생략 ...]';
-        var hasProxy=orig.length>50;
-        var proxyNote=hasProxy
-          ?'\n\n---\n★ 아래는 지금 이 순간 직접 크롤링한 최신 본문입니다. 반드시 이 텍스트를 기준으로 작성하세요.\n\n원문 제목: '+title+'\n원문 URL: '+url+'\n\n'+orig+'\n---'
-          :'';
-        /* 프록시 성공 시 urlContext 불필요 — 캐시 방지 */
-        if(hasProxy)urlTools=[];
-        return (hasProxy?'아래 제공된 원문을 기반으로 뉴스레터를 작성해주세요.':'다음 URL의 원문을 직접 읽고 뉴스레터를 작성해주세요.\nURL: '+url)
-          +'\n작성 형식: '+styleHint+proxyNote+'\n\n★ 앞쪽 본문에서 핵심 수치를 구체적으로 언급하고, 뒤쪽으로 갈수록 궁금증을 남겨서 원문 클릭을 유도하세요.'+volInstruction;
-      })()
-    :(function(){
-        var orig=paras.map(function(p){return(p.isH?'## ':'')+p.text;}).join('\n\n');
-        if(orig.length>15000)orig=orig.substring(0,15000)+'\n\n[... 원문 일부 생략 ...]';
-        return '원문 제목: '+title+'\n\n원문:\n'+orig+'\n\n★ 앞쪽 본문에서 핵심 수치를 구체적으로 언급하고, 뒤쪽으로 갈수록 궁금증을 남겨서 원문 클릭을 유도하세요.'+volInstruction;
-      })();
-  /* 모델별로 body를 만들어서 시도 — system_instruction 지원 여부에 따라 분기 */
+  /* 프록시 텍스트 준비 — urlTools 결정보다 먼저 */
+  var orig=paras.map(function(p){return(p.isH?'## ':'')+p.text;}).join('\n\n');
+  if(orig.length>15000)orig=orig.substring(0,15000)+'\n\n[... 원문 일부 생략 ...]';
+  var hasProxy=url&&orig.length>50;
+  var userMsg;
+  if(url){
+    var proxyNote=hasProxy
+      ?'\n\n---\n★ 아래는 지금 이 순간 직접 크롤링한 최신 본문입니다. 반드시 이 텍스트를 기준으로 작성하세요.\n\n원문 제목: '+title+'\n원문 URL: '+url+'\n\n'+orig+'\n---'
+      :'';
+    userMsg=(hasProxy?'아래 제공된 원문을 기반으로 뉴스레터를 작성해주세요.':'다음 URL의 원문을 직접 읽고 뉴스레터를 작성해주세요.\nURL: '+url)
+      +'\n작성 형식: '+styleHint+proxyNote+'\n\n★ 앞쪽 본문에서 핵심 수치를 구체적으로 언급하고, 뒤쪽으로 갈수록 궁금증을 남겨서 원문 클릭을 유도하세요.'+volInstruction;
+  } else {
+    userMsg='원문 제목: '+title+'\n\n원문:\n'+orig+'\n\n★ 앞쪽 본문에서 핵심 수치를 구체적으로 언급하고, 뒤쪽으로 갈수록 궁금증을 남겨서 원문 클릭을 유도하세요.'+volInstruction;
+  }
+  /* 프록시 성공 시 urlContext 불필요, 실패 시 urlContext fallback */
   var models=['gemini-2.5-flash'];
-  var urlTools=url?[{"urlContext":{}}]:[];
+  var urlTools=hasProxy?[]:(url?[{"urlContext":{}}]:[]);
   function makeBody(useSystemInstruction){
     if(useSystemInstruction){
       return JSON.stringify({system_instruction:{parts:[{text:sysPrompt}]},contents:[{parts:[{text:userMsg}]}],generationConfig:{temperature:0.5,maxOutputTokens:32768},tools:urlTools});
@@ -1176,6 +1171,10 @@ function syncToolbar(){
 function stibeeHTML(){
   var clone=NL.cloneNode(true);
   clone.querySelectorAll('[data-ui-ctrl]').forEach(function(el){el.remove();});
+  clone.querySelectorAll('.block-ctrl-btn').forEach(function(el){el.remove();});
+  /* 블록 컨트롤 래퍼도 제거 (▲▼❐✕ 버튼 그룹) */
+  clone.querySelectorAll('[style*="pointer-events:auto"]').forEach(function(el){if(el.querySelector('[data-bc]'))el.remove();});
+  clone.querySelectorAll('[data-bc]').forEach(function(el){el.remove();});
   clone.querySelectorAll('[data-src-idx]').forEach(function(el){el.removeAttribute('data-src-idx');});
   clone.querySelectorAll('[data-el]').forEach(function(el){el.removeAttribute('data-el');});
   clone.querySelectorAll('[contenteditable]').forEach(function(el){el.removeAttribute('contenteditable');});
