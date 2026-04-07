@@ -1204,11 +1204,6 @@ function stibeeHTML(){
   var nlLS=NL.style.letterSpacing||'-0.27px';
   var nlFS=NL.style.fontSize||'16px';
   var inner=clone.innerHTML;
-  /* 빈 태그 정리 — 불필요한 여백 제거 */
-  inner=inner.replace(/<p[^>]*>\s*<br\s*\/?>\s*<\/p>/gi,'');
-  inner=inner.replace(/<p[^>]*>\s*&nbsp;\s*<\/p>/gi,'');
-  inner=inner.replace(/<div[^>]*>\s*<br\s*\/?>\s*<\/div>/gi,'');
-  inner=inner.replace(/(<br\s*\/?>){2,}/gi,'<br>');
   /* HTML 크기 체크 */
   var sizeKB=Math.round(inner.length/1024);
   if(sizeKB>90)toast('⚠️ HTML '+sizeKB+'KB — Gmail은 102KB 넘으면 잘려요!');
