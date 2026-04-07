@@ -1200,20 +1200,7 @@ function stibeeHTML(){
   clone.querySelectorAll('div').forEach(function(el){
     if(el.style.position==='absolute'||el.style.position==='fixed'){el.remove();}
   });
-  /* 2. display:flex → table 변환 (Gmail/Outlook 호환) */
-  clone.querySelectorAll('*').forEach(function(el){
-    if(el.style.display==='flex'){
-      el.style.display='table';el.style.width='100%';
-      Array.from(el.children).forEach(function(child){
-        child.style.display='table-cell';child.style.verticalAlign='middle';
-      });
-    }
-  });
-  /* 3. gap 속성 제거 (이메일에서 미지원) */
-  clone.querySelectorAll('*').forEach(function(el){
-    if(el.style.gap)el.style.gap='';
-  });
-  /* 4. 빈 a 태그 제거 */
+  /* 2. 빈 a 태그 제거 */
   clone.querySelectorAll('a').forEach(function(el){
     if(!el.textContent.trim()&&!el.querySelector('img'))el.remove();
   });
