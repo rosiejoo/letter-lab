@@ -760,7 +760,7 @@ function buildNL(sections){
     var tocTag=sections[ti].tag;
     /* TOC 제목은 간략하게: 소제목 우선, 없으면 제목의 첫 줄만 */
     var tocTitle=sections[ti].ai.subtitle||sections[ti].ai.oneliner||(sections[ti].ai.title||'').split(/<br\s*\/?>/i)[0]||sections[ti].data.title;
-    S+='<div data-toc-idx="'+ti+'" style="display:table;width:100%;border-collapse:collapse;padding:10px 14px;margin-bottom:4px;border:1px solid #D5D2CA;border-radius:6px;box-sizing:border-box">';
+    S+='<div data-toc-idx="'+ti+'" style="padding:8px 0;margin-bottom:2px">';
     S+='<span style="display:table-cell;vertical-align:middle;font-size:11px;font-weight:700;color:#fff;background:#3B48CC;padding:3px 10px;border-radius:4px;white-space:nowrap;width:1%">'+esc(tocTag)+'</span>';
     S+='<span style="display:table-cell;vertical-align:middle;font-size:13px;color:#333;line-height:1.5;word-break:keep-all;padding-left:10px">'+cleanBr(tocTitle)+'</span>';
     S+='</div>';
@@ -777,7 +777,7 @@ function buildNL(sections){
     S+='<div data-section="'+si+'" data-track-url="'+esc(sec.trackingUrl||'')+'" style="position:relative">';
 
     /* 구분선 + 태그 라인 */
-    S+='<div style="border-top:1px solid #D5D2CA;margin:36px 0 0;padding-top:20px">';
+    S+='<div data-sec-hdr="1" style="border-top:1px solid #D5D2CA;margin:36px 0 0;padding-top:20px">';
     S+='<div style="display:inline-block;font-size:11px;font-weight:700;color:#3B48CC;background:#FBFBFF;padding:4px 12px;border-radius:4px;letter-spacing:0.5px;margin-bottom:16px;border:1px solid #E5E7EB">'+esc(sec.tag);
     S+='</div></div>';
 
@@ -971,12 +971,12 @@ function buildNL(sections){
         }
       }
       if(subTitle){
-        S+='<div data-src-idx="s'+si+'b'+bi+'" style="margin:0 0 8px">';
-        S+='<div style="font-size:18px;font-weight:700;color:#111;margin-bottom:2px;'+ff+'">'+esc(subTitle)+'</div>';
+        S+='<div data-src-idx="s'+si+'b'+bi+'" style="margin:0 0 28px">';
+        S+='<div style="font-size:18px;font-weight:700;color:#111;margin-bottom:6px;'+ff+'">'+esc(subTitle)+'</div>';
         if(bodyContent)S+='<p style="color:#222;margin:0;font-size:16px;line-height:1.8">'+bodyContent+'</p>';
         S+='</div>';
       } else {
-        S+='<p data-src-idx="s'+si+'b'+bi+'" style="color:#222;margin:0 0 20px;font-size:16px;line-height:1.8">'+bodyText+'</p>';
+        S+='<p data-src-idx="s'+si+'b'+bi+'" style="color:#222;margin:0 0 12px;font-size:16px;line-height:1.8">'+bodyText+'</p>';
       }
       } /* end isProse else */
     }
@@ -1232,6 +1232,12 @@ function stibeeHTML(){
   clone.querySelectorAll('[style*="position:relative"]').forEach(function(el){
     el.style.position='';
   });
+  /* 소제목(18px 볼드) 뒤 간격 정규화 */
+  clone.querySelectorAll('div').forEach(function(el){
+    if(el.style.fontSize==='18px'&&(el.style.fontWeight==='700'||el.style.fontWeight==='bold')){
+      el.style.marginBottom='0';
+    }
+  });
   var inner=clone.innerHTML;
   /* HTML 크기 체크 */
   var sizeKB=Math.round(inner.length/1024);
@@ -1456,11 +1462,11 @@ on('#line-height-select','change',function(e){
   var val=e.target.value;
   var sel=window.getSelection();
   if(!sel.rangeCount||sel.isCollapsed){
-    /* 선택 없으면 전체 적용 — 내부 블록 요소도 모두 변경 */
+    /* 선택 없으면 전체 적용 — 모든 블록 요소 line-height 강제 변경 */
     NL.style.lineHeight=val;
-    NL.querySelectorAll('p,div,li,blockquote').forEach(function(el){
+    NL.querySelectorAll('p,div,li,blockquote,span').forEach(function(el){
       if(el.closest('[data-el="btn"]'))return;
-      if(el.style.lineHeight)el.style.lineHeight=val;
+      el.style.lineHeight=val;
     });
   } else {
     /* 선택 있으면 가장 가까운 블록 요소에 적용 */
@@ -2167,6 +2173,28 @@ NL.addEventListener('click',function checkBoxSelect(e){
 })();
 
 /* ===== Ctrl+Z 커스텀 Undo ===== */
+/* ===== 붙여넣기: 외부 스타일 제거, 순수 텍스트만 삽입 ===== */
+NL.addEventListener('paste',function(e){
+  e.preventDefault();
+  var text=(e.clipboardData||window.clipboardData).getData('text/plain');
+  if(!text)return;
+  document.execCommand('insertText',false,text);
+});
+
+/* ===== 공통 유틸: 커서가 소제목(20px title div) 안에 있는지 반환 ===== */
+function getCaretTitleEl(){
+  var sel=window.getSelection();
+  if(!sel||!sel.rangeCount)return null;
+  var node=sel.getRangeAt(0).startContainer;
+  var el=node.nodeType===3?node.parentElement:node;
+  while(el&&el!==NL){
+    if(el.tagName==='DIV'&&el.style&&el.style.fontSize==='20px'
+       &&el.parentElement&&el.parentElement.hasAttribute('data-section'))return el;
+    el=el.parentElement;
+  }
+  return null;
+}
+
 NL.addEventListener('keydown',function(e){
   if((e.metaKey||e.ctrlKey)&&e.key==='z'&&!e.shiftKey){
     if(undoStack.length>1){
@@ -2175,6 +2203,155 @@ NL.addEventListener('keydown',function(e){
       NL.innerHTML=undoStack[undoStack.length-1];
       toast('되돌리기');
     }
+  }
+
+  /* Tab: 들여쓰기 방지 */
+  if(e.key==='Tab'){e.preventDefault();return;}
+
+  /* Backspace: 섹션 간 병합 차단 + Backspace 후 커서가 <strong> 안으로 들어가는 것 방지 */
+  if(e.key==='Backspace'){
+    var selBS=window.getSelection();
+    if(selBS&&selBS.rangeCount){
+      var rBS=selBS.getRangeAt(0);
+      if(rBS.collapsed&&rBS.startOffset===0){
+        var nodeBS=rBS.startContainer;
+        var elBS=nodeBS.nodeType===3?nodeBS.parentElement:nodeBS;
+        if(elBS.hasAttribute&&elBS.hasAttribute('data-section')){e.preventDefault();return;}
+      }
+    }
+    /* Backspace 처리 후 커서가 <strong>/<b> 경계로 빠졌으면 바깥으로 이동 */
+    setTimeout(function(){
+      var selAB=window.getSelection();
+      if(!selAB||!selAB.rangeCount||!selAB.isCollapsed)return;
+      var rAB=selAB.getRangeAt(0);
+      if(!NL.contains(rAB.startContainer))return;
+      var cAB=rAB.startContainer;
+      var pAB=cAB.nodeType===3?cAB.parentElement:cAB;
+      /* 커서가 offset 0이고 <strong>/<b> 바로 안에 있으면 바깥으로 */
+      if(rAB.startOffset===0&&(pAB.tagName==='STRONG'||pAB.tagName==='B')){
+        var fixR=document.createRange();
+        fixR.setStartBefore(pAB);fixR.collapse(true);
+        selAB.removeAllRanges();selAB.addRange(fixR);
+      }
+      /* 소제목(18px 볼드) div 안에 본문 텍스트가 합쳐졌으면 분리 복원 */
+      var titleDiv=pAB;
+      while(titleDiv&&titleDiv!==NL){
+        if(titleDiv.tagName==='DIV'&&titleDiv.style&&(titleDiv.style.fontSize==='18px'||titleDiv.style.fontSize==='20px')&&(titleDiv.style.fontWeight==='700'||titleDiv.style.fontWeight==='800'||titleDiv.style.fontWeight==='bold')){
+          /* 소제목 div 안에 텍스트가 원래 소제목보다 길어졌으면 = 본문이 합쳐진 것 */
+          var allText=titleDiv.textContent||'';
+          if(allText.length>60){
+            /* 소제목 div의 첫 번째 텍스트/요소만 남기고 나머지를 새 p로 분리 */
+            var children=Array.from(titleDiv.childNodes);
+            var splitIdx=-1;
+            var charCount=0;
+            for(var ci=0;ci<children.length;ci++){
+              var cLen=(children[ci].textContent||'').length;
+              charCount+=cLen;
+              if(charCount>50&&ci>0){splitIdx=ci;break;}
+            }
+            if(splitIdx<0)splitIdx=1;
+            var newP=document.createElement('p');
+            newP.style.cssText='color:#222;margin:0;font-size:16px;line-height:1.8;font-weight:normal';
+            while(titleDiv.childNodes.length>splitIdx){
+              newP.appendChild(titleDiv.childNodes[splitIdx]);
+            }
+            titleDiv.parentNode.insertBefore(newP,titleDiv.nextSibling);
+            /* 커서를 새 p 시작으로 */
+            var newR=document.createRange();newR.setStart(newP,0);newR.collapse(true);
+            selAB.removeAllRanges();selAB.addRange(newR);
+          }
+          break;
+        }
+        titleDiv=titleDiv.parentElement;
+      }
+    },10);
+  }
+
+  /* Delete: 소제목 끝에서 아래 본문이 소제목 안으로 빨려들어가는 것 방지 */
+  if(e.key==='Delete'){
+    var titleDel=getCaretTitleEl();
+    if(titleDel){
+      var selDel=window.getSelection();
+      var rDel=selDel.getRangeAt(0);
+      /* 커서가 소제목의 마지막 위치인지 확인 */
+      var endR=document.createRange();
+      endR.selectNodeContents(titleDel);endR.collapse(false);
+      if(rDel.compareBoundaryPoints(Range.END_TO_END,endR)===0){
+        e.preventDefault();return;
+      }
+    }
+  }
+
+  /* ===== Enter / Shift+Enter: 모두 <br> 삽입 — 행간 동일하게 유지 ===== */
+  if(e.key==='Enter'){
+    e.preventDefault();
+    var selE=window.getSelection();
+    if(!selE||!selE.rangeCount)return;
+
+    /* 소제목(20px)에서 Enter → 다음 본문 시작으로 커서 이동 */
+    var titleEl2=getCaretTitleEl();
+    if(titleEl2){
+      var nextBodyEl=titleEl2.nextElementSibling;
+      if(nextBodyEl){
+        var r2=document.createRange();
+        r2.setStart(nextBodyEl,0);r2.collapse(true);
+        selE.removeAllRanges();selE.addRange(r2);
+      }
+      return;
+    }
+
+    /* 그 외 모든 위치: <br> 삽입 (행간 = 기존 줄간격과 동일) */
+    var rE=selE.getRangeAt(0);
+    rE.deleteContents();
+
+    /* <strong>/<b> 안에 있으면 먼저 빠져나오기 */
+    var escNode=rE.startContainer;
+    var escEl=escNode.nodeType===3?escNode.parentElement:escNode;
+    while(escEl&&escEl!==NL){
+      if(escEl.tagName==='STRONG'||escEl.tagName==='B'){
+        /* 커서가 strong 맨 앞(offset 0)이면 strong 앞에 br 삽입 */
+        if(rE.startOffset===0){
+          var brBefore=document.createElement('br');
+          escEl.parentNode.insertBefore(brBefore,escEl);
+          var rBefore=document.createRange();rBefore.setStartBefore(escEl);rBefore.collapse(true);
+          selE.removeAllRanges();selE.addRange(rBefore);
+          return;
+        }
+        rE=document.createRange();
+        rE.setStartAfter(escEl);rE.collapse(true);
+        selE.removeAllRanges();selE.addRange(rE);
+        break;
+      }
+      escEl=escEl.parentElement;
+    }
+
+    /* <br> 삽입 */
+    rE=selE.getRangeAt(0);
+    var brEl=document.createElement('br');
+    rE.insertNode(brEl);
+    /* 커서를 <br> 뒤로 — 다음 노드가 없으면 빈 텍스트 노드 추가 */
+    if(!brEl.nextSibling){brEl.parentNode.appendChild(document.createTextNode(''));}
+    var afterR=document.createRange();
+    afterR.setStartAfter(brEl);afterR.collapse(true);
+    selE.removeAllRanges();selE.addRange(afterR);
+  }
+});
+
+/* ===== beforeinput: <strong> 앞에서 타이핑 시 bold 방지 ===== */
+NL.addEventListener('beforeinput',function(e){
+  if(e.inputType!=='insertText')return;
+  var sel=window.getSelection();
+  if(!sel||!sel.rangeCount||!sel.isCollapsed)return;
+  var range=sel.getRangeAt(0);
+  var c=range.startContainer;
+  var p=c.nodeType===3?c.parentElement:c;
+  /* offset 0이고 <strong>/<b> 바로 안에 있으면 앞으로 빼서 non-bold 입력 */
+  if(range.startOffset===0&&(p.tagName==='STRONG'||p.tagName==='B')){
+    e.preventDefault();
+    var nr=document.createRange();
+    nr.setStartBefore(p);nr.collapse(true);
+    sel.removeAllRanges();sel.addRange(nr);
+    if(e.data)document.execCommand('insertText',false,e.data);
   }
 });
 
@@ -2278,6 +2455,7 @@ genBtn.addEventListener('click',function(){
     var result=buildNL(sections);
 
     NL.innerHTML=result.html;undoStack=[];saveUndo();origOut.innerHTML=buildOrigSections(sections);hasOrigData=true;
+    currentDraftName=null; /* 새 뉴스레터 생성 시 임시저장 이름 초기화 */
     showEditor();
     setupHL();
     /* 원본 대조 탭 클릭 */

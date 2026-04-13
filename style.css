@@ -163,7 +163,21 @@ body.sns-mode{background-image:linear-gradient(160deg,#EBF2FA 0%,#E8EFF8 25%,#EF
 .block-ctrl-btn:hover{background:#F1F5F9;color:#475569;border-color:#CBD5E1}
 .newsletter-output.editable a[data-el="link"]{cursor:pointer}
 .newsletter-output.editable [data-section]{cursor:text;transition:opacity .15s}
-.newsletter-output.editable [data-section]:hover{outline:1px dashed var(--border);outline-offset:4px}
+.newsletter-output.editable [data-section]:hover{outline:none}
+/* 편집모드: 섹션 구분선·태그 뱃지 숨김 — 연속 문서처럼 보이게 */
+.newsletter-output.editable [data-sec-hdr]{display:none!important}
+/* 편집모드: 섹션 간 여백 유지 */
+.newsletter-output.editable [data-section]{padding-top:28px;border-top:2px dashed #E2E8F0;margin-top:8px}
+.newsletter-output.editable [data-section="0"]{border-top:none;padding-top:0;margin-top:0}
+/* 편집모드: p margin 제거 → Enter = 정확히 1줄 높이, 행간과 동일 */
+.newsletter-output.editable p{margin:0!important}
+/* 편집모드: div 본문도 margin 통일 */
+.newsletter-output.editable [data-src-idx]{margin-bottom:0!important}
+/* 편집모드: 소제목 아래 여백 유지 */
+.newsletter-output.editable [data-section]>div[style*="font-size:20px"]{margin-bottom:10px!important}
+.newsletter-output.editable [data-section]>div[style*="font-size:18px"]{margin-top:14px!important;margin-bottom:0!important}
+.newsletter-output div[style*="font-size:18px"][style*="font-weight:700"]{margin-bottom:0!important}
+.newsletter-output div[style*="font-size:18px"]+p{margin-top:0!important}
 
 /* Highlighting */
 .newsletter-output:not(.editable) [data-src-idx]{cursor:pointer;transition:background .15s;border-radius:4px;padding:2px 0}
