@@ -549,7 +549,7 @@ function aiRewrite(paras,title,volumeText,writeStyle,url,totalUrls){
     userMsg='원문 제목: '+title+'\n\n원문:\n'+orig+'\n\n★ 앞쪽 본문에서 핵심 수치를 구체적으로 언급하고, 뒤쪽으로 갈수록 궁금증을 남겨서 원문 클릭을 유도하세요.'+volInstruction;
   }
   /* 프록시 성공 시 urlContext 불필요, 실패 시 urlContext fallback */
-  var models=['gemini-2.5-flash'];
+  var models=['gemini-2.5-flash','gemini-2.0-flash'];
   var urlTools=hasProxy?[]:(url?[{"urlContext":{}}]:[]);
   function makeBody(useSystemInstruction){
     if(useSystemInstruction){
@@ -564,7 +564,7 @@ function aiRewrite(paras,title,volumeText,writeStyle,url,totalUrls){
     var u='https://generativelanguage.googleapis.com/v1beta/models/'+models[i]+':generateContent?key='+key;
     console.log('Trying model:',models[i],'systemInstruction:',!triedWithoutSys);
     return fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:body}).then(function(r){
-      if(r.status===404||r.status===403){console.warn(models[i]+' fail '+r.status);return tryM(i+1,false);}
+      if(r.status===404||r.status===403||r.status===503){console.warn(models[i]+' fail '+r.status);return tryM(i+1,false);}
       if(r.status===400){
         /* 400일 때 system_instruction 미지원일 수 있음 — 없이 재시도 */
         if(!triedWithoutSys){console.warn(models[i]+' 400 — retrying without system_instruction');return tryM(i,true);}
@@ -1179,6 +1179,8 @@ function stibeeHTML(){
   /* 블록 컨트롤 래퍼도 제거 (▲▼❐✕ 버튼 그룹) */
   clone.querySelectorAll('[style*="pointer-events:auto"]').forEach(function(el){if(el.querySelector('[data-bc]'))el.remove();});
   clone.querySelectorAll('[data-bc]').forEach(function(el){el.remove();});
+  /* 편집 모드에서 숨겨진 섹션 헤더(태그 뱃지) 제거 */
+  clone.querySelectorAll('[data-sec-hdr]').forEach(function(el){el.remove();});
   clone.querySelectorAll('[data-src-idx]').forEach(function(el){el.removeAttribute('data-src-idx');});
   clone.querySelectorAll('[data-el]').forEach(function(el){el.removeAttribute('data-el');});
   clone.querySelectorAll('[contenteditable]').forEach(function(el){el.removeAttribute('contenteditable');});
@@ -1718,11 +1720,9 @@ imgFileInput.addEventListener('change',function(e){
         }).catch(function(){return null;});
     }
     tryImgbb().then(function(url){
-      if(url){qs('#img-url').value=url;qs('#img-preview').src=url;toast('✅ 이미지 업로드 완료!');return;}
-      return tryFreeimage();
-    }).then(function(url){
-      if(url&&typeof url==='string'){qs('#img-url').value=url;qs('#img-preview').src=url;toast('✅ 이미지 업로드 완료!');return;}
-      if(qs('#img-url').value==='업로드 중...'){qs('#img-url').value=base64;toast('⚠️ 자동 업로드 실패 — 이미지 URL을 직접 입력해주세요');}
+      /* imgbb 비활성화 — 이메일 핫링크 차단 문제 */
+      qs('#img-url').value='';
+      toast('⚠️ 이미지 URL을 직접 입력해주세요 (블로그 원문에서 이미지 주소 복사)');
     });
   };
   reader.readAsDataURL(file);imgFileInput.value='';
@@ -2124,7 +2124,7 @@ NL.addEventListener('click',function checkBoxSelect(e){
     if(el.closest('[data-bc]')||el===ctrlWrap)return activeBlock;
     if(el.tagName==='HR')return el;
     if(el.tagName==='IMG'){var pa=el.parentNode;return(pa&&pa.tagName==='A')?pa:el;}
-    return el.closest('[data-el="box"]')||el.closest('[data-el="btn"]')||el.closest('[data-el="spacer"]')||null;
+    return el.closest('[data-el="box"]')||el.closest('[data-el="btn"]')||el.closest('[data-el="spacer"]')||el.closest('[data-src-idx="intro"]')||null;
   }
   function showControls(block){
     if(!block||!isEditable){hideControls();return;}
@@ -2195,7 +2195,30 @@ function getCaretTitleEl(){
   return null;
 }
 
+/* ===== 디버그 로그 (임시) ===== */
+(function(){
+  var dbg=document.createElement('div');
+  dbg.id='nl-debug';
+  dbg.style.cssText='position:fixed;bottom:12px;right:12px;z-index:9999;background:rgba(0,0,0,.82);color:#7EE787;font-size:11px;font-family:monospace;padding:8px 12px;border-radius:8px;max-width:340px;word-break:break-all;display:none;pointer-events:none';
+  document.body.appendChild(dbg);
+  function dbLog(msg){
+    if(!window._nlDebugOn)return;
+    dbg.style.display='block';
+    dbg.textContent=msg;
+    clearTimeout(window._dbTimer);window._dbTimer=setTimeout(function(){dbg.style.display='none';},3000);
+  }
+  window._nlDbLog=dbLog;
+  /* 디버그 활성화: 브라우저 콘솔에서 window._nlDebugOn=true 입력 */
+})();
+
 NL.addEventListener('keydown',function(e){
+  if(window._nlDebugOn&&e.key.length===1){
+    var sel=window.getSelection();
+    var r=sel&&sel.rangeCount?sel.getRangeAt(0):null;
+    var c=r?r.startContainer:null;
+    var p=c&&c.nodeType===3?c.parentElement:c;
+    window._nlDbLog('keydown key='+e.key+' | container=<'+( p?p.tagName:'?')+'>'+( p&&p.className?' .'+p.className:'')+'| offset='+( r?r.startOffset:'-'));
+  }
   if((e.metaKey||e.ctrlKey)&&e.key==='z'&&!e.shiftKey){
     if(undoStack.length>1){
       e.preventDefault();
@@ -2337,21 +2360,50 @@ NL.addEventListener('keydown',function(e){
   }
 });
 
-/* ===== beforeinput: <strong> 앞에서 타이핑 시 bold 방지 ===== */
+/* ===== beforeinput: bold 컨텍스트에서 non-bold 영역 타이핑 방지 ===== */
 NL.addEventListener('beforeinput',function(e){
+  if(window._nlDebugOn&&e.inputType==='insertText'){
+    var sel2=window.getSelection();
+    var r2=sel2&&sel2.rangeCount?sel2.getRangeAt(0):null;
+    var c2=r2?r2.startContainer:null;
+    var p2=c2&&c2.nodeType===3?c2.parentElement:c2;
+    window._nlDbLog('beforeinput data='+e.data+' | parent=<'+(p2?p2.tagName:'?')+'> offset='+(r2?r2.startOffset:'-')+' bold='+document.queryCommandState('bold'));
+  }
   if(e.inputType!=='insertText')return;
   var sel=window.getSelection();
   if(!sel||!sel.rangeCount||!sel.isCollapsed)return;
   var range=sel.getRangeAt(0);
   var c=range.startContainer;
   var p=c.nodeType===3?c.parentElement:c;
-  /* offset 0이고 <strong>/<b> 바로 안에 있으면 앞으로 빼서 non-bold 입력 */
+
+  /* Case 1: offset 0이고 <strong>/<b> 바로 안에 있으면 앞으로 빼서 non-bold 입력 */
   if(range.startOffset===0&&(p.tagName==='STRONG'||p.tagName==='B')){
     e.preventDefault();
     var nr=document.createRange();
     nr.setStartBefore(p);nr.collapse(true);
     sel.removeAllRanges();sel.addRange(nr);
     if(e.data)document.execCommand('insertText',false,e.data);
+    return;
+  }
+
+  /* Case 2: 커서가 <strong>/<b> 직후 위치에 있어서 브라우저가 bold를 상속하는 경우만 처리
+     → 커서 바로 앞 노드가 <strong>/<b>인지 정밀하게 확인 */
+  var prevSib=null;
+  if(c.nodeType===3){
+    /* 텍스트 노드 맨 앞(offset 0)이면 이전 형제 확인 */
+    if(range.startOffset===0)prevSib=c.previousSibling;
+  } else {
+    /* 요소 노드면 startOffset-1 위치 자식 확인 */
+    prevSib=range.startOffset>0?range.startContainer.childNodes[range.startOffset-1]:null;
+  }
+  if(prevSib&&(prevSib.tagName==='STRONG'||prevSib.tagName==='B')&&document.queryCommandState('bold')){
+    /* </strong> 직후 커서 → 일반 텍스트 노드로 강제 삽입 */
+    e.preventDefault();
+    var tn=document.createTextNode(e.data||'');
+    range.insertNode(tn);
+    var r3=document.createRange();
+    r3.setStartAfter(tn);r3.collapse(true);
+    sel.removeAllRanges();sel.addRange(r3);
   }
 });
 
