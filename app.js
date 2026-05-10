@@ -756,6 +756,7 @@ function buildMagazinePrompt(volText){
     +'★ [서브]는 각 [본문] 바로 뒤에! 핵심 수치를 · 로 구분해서 나열!\n'
     +'★ [통계]는 가장 임팩트 있는 숫자 1개만! "숫자 | 설명" 형식!\n'
     +'★ [팁]은 실무적 마케터 액션! 2~3문장!\n'
+    +'★★★ [제목] [제목B] [제목C] [제목D] [제목E] 5개 모두 반드시 작성! 하나도 빠뜨리면 안 돼! 제목이 가장 중요해! ★★★\n'
     +'★★★ 출력에 분석 과정, 영어 텍스트, 계획, 메모 등을 절대 포함하지 마! [태그] 형식의 결과물만 출력해! ★★★';
 }
 
@@ -1081,23 +1082,21 @@ function buildNL(sections){
           var subText=bodyText.replace('__SUB__','').trim();
           S+='<div data-src-idx="s'+si+'b'+bi+'" style="font-size:13px;color:#888;margin:0 0 20px;font-style:italic;'+ff+'">'+subText+'</div>';
         } else if(bodyText.indexOf('__TIP__')===0){
-          /* [팁] — Data-Forecast Point 박스 */
+          /* [팁] — Data-Forecast Point 박스 + 원문 링크 포함 */
           var tipText=bodyText.replace('__TIP__','').trim();
           S+='<div data-src-idx="s'+si+'b'+bi+'" style="margin:18px 0 28px;padding:16px 20px;background:#FBFBFF;border-radius:4px;border:1px solid #E5E7EB;position:relative;'+ff+'" class="mag-stat-box">';
           S+='<button class="mag-stat-del" onclick="this.parentElement.remove()" title="삭제" style="color:#3B48CC">✕</button>';
           S+='<div style="font-size:12px;font-weight:800;letter-spacing:2px;color:#3B48CC;margin-bottom:8px">DATA-FORECAST POINT</div>';
-          S+='<p style="margin:0;font-size:15px;color:#333;line-height:1.9">'+tipText+'</p>';
+          S+='<p style="margin:0 0 14px;font-size:15px;color:#333;line-height:1.9">'+tipText+'</p>';
+          /* 원문 링크를 박스 안에 */
+          if(sec.url){
+            var tipLabel=window._magLastUsedLabel||sec.tag;
+            S+='<div style="text-align:right;margin-top:12px"><a href="'+esc(sec.url)+'" target="_blank" style="font-size:12px;font-weight:700;color:#0a0a0a;text-decoration:none;letter-spacing:0.5px"><span style="color:#0a0a0a">🔗 '+esc(tipLabel)+' 업종 전체 데이터 확인하기 →</span></a></div>';
+          }
           S+='</div>';
         } else if(bodyText.indexOf('__STAT__')===0){
-          /* [통계] — 풀아웃 숫자 박스 */
-          var statParts=bodyText.replace('__STAT__','').split('|');
-          var statNum=(statParts[0]||'').trim();
-          var statLabel=(statParts[1]||'').trim();
-          S+='<div data-src-idx="s'+si+'b'+bi+'" data-el="box" style="margin:20px 0;padding:20px 24px;background:#0a0a0a;border-radius:6px;display:table;width:100%;position:relative" class="mag-stat-box">';
-          S+='<button class="mag-stat-del" onclick="this.parentElement.remove()" title="삭제">✕</button>';
-          S+='<span style="display:table-cell;vertical-align:middle;font-size:36px;font-weight:900;color:#fff;letter-spacing:-1px;line-height:1;padding-right:16px;white-space:nowrap">'+esc(statNum)+'</span>';
-          S+='<span style="display:table-cell;vertical-align:middle;font-size:14px;color:#aaa;line-height:1.5">'+esc(statLabel)+'</span>';
-          S+='</div>';
+          /* [통계] — 매거진형에서는 렌더링하지 않음 (서브헤드에 수치 이미 포함) */
+          continue;
         } else {
           /* 일반 [본문] — 소제목 분리 */
           var magPlain=bodyText.replace(/<[^>]+>/g,'').trim();
@@ -1121,7 +1120,7 @@ function buildNL(sections){
             var magLabel=window._magNextLabel||sec.tag;
             window._magNextLabel='';
             window._magLastUsedLabel=magLabel;
-            S+='<div data-src-idx="s'+si+'b'+bi+'" style="margin:24px 0 0;padding-top:20px">';
+            S+='<div data-src-idx="s'+si+'b'+bi+'" style="margin:28px 0 0;padding-top:24px">';
             /* 라벨: 01 ─── 업종명 */
             S+='<div style="display:table;width:100%;margin-bottom:18px">';
             S+='<span style="display:table-cell;vertical-align:middle;font-size:11px;font-weight:800;color:#bbb;letter-spacing:2px;width:1%;white-space:nowrap;padding-right:10px">'+magNum+'</span>';
@@ -1154,7 +1153,7 @@ function buildNL(sections){
           if(hlPlain.length<=80){
             S+='<div data-src-idx="s'+si+'b'+bi+'" data-el="box" style="background:#FBFBFF;padding:12px 18px 12px 16px;border-radius:10px;margin:14px 0;border:1px solid #E0DEFF;color:#3B48CC;font-size:14px;line-height:1.7;font-weight:600;display:flex;align-items:flex-start;gap:8px;'+ff+'"><span style="font-size:16px;flex-shrink:0">💡</span><span>'+hlText.replace(/<\/?strong>/g,'')+'</span></div>';
           } else {
-            S+='<p data-src-idx="s'+si+'b'+bi+'" style="color:#222;margin:0 0 20px;font-size:16px;line-height:1.8;font-weight:400">'+hlText.replace(/<\/?strong>/g,'')+'</p>';
+            S+='<p data-src-idx="s'+si+'b'+bi+'" style="color:#222;margin:0 0 20px;font-size:15px;line-height:1.8;font-weight:400">'+hlText.replace(/<\/?strong>/g,'')+'</p>';
           }
           continue;
         }
@@ -1174,7 +1173,7 @@ function buildNL(sections){
           var beforeCircle=bodyText.substring(0,htmlPos).trim();
           var afterCircle=bodyText.substring(htmlPos).trim();
           if(beforeCircle){
-            S+='<p data-src-idx="s'+si+'b'+bi+'a" style="color:#222;margin:0 0 20px;font-size:16px;line-height:1.8;font-weight:400">'+beforeCircle.replace(/<\/?strong>/g,'')+'</p>';
+            S+='<p data-src-idx="s'+si+'b'+bi+'a" style="color:#222;margin:0 0 20px;font-size:15px;line-height:1.8;font-weight:400">'+beforeCircle.replace(/<\/?strong>/g,'')+'</p>';
           }
           bodyText=afterCircle;
         }
@@ -1234,13 +1233,13 @@ function buildNL(sections){
             S+='<div style="font-size:18px;font-weight:700;color:#111;margin-bottom:12px;'+ff+'">'+pTitle+'</div>';
             if(pBody){
               pBody=pBody.replace(/<\/?strong>/g,'');
-              S+='<p style="color:#222;margin:0;font-size:16px;line-height:1.8;font-weight:400">'+pBody+'</p>';
+              S+='<p style="color:#222;margin:0;font-size:15px;line-height:1.8;font-weight:400">'+pBody+'</p>';
             }
             S+='</div>';
           } else {
             /* 번호는 있지만 분리 안 됨 → 전체를 일반 본문으로 */
             var fullText=(circleMatch[1]+' '+numTitle).replace(/<\/?strong>/g,'');
-            S+='<p data-src-idx="s'+si+'b'+bi+'" style="color:#222;margin:0 0 20px;font-size:16px;line-height:1.8;font-weight:400">'+fullText+'</p>';
+            S+='<p data-src-idx="s'+si+'b'+bi+'" style="color:#222;margin:0 0 20px;font-size:15px;line-height:1.8;font-weight:400">'+fullText+'</p>';
           }
         } else {
           /* 줄글형: ❶❷❸ 번호가 없으면 자동으로 붙여주기 */
@@ -1265,10 +1264,10 @@ function buildNL(sections){
             var proseAfter=proseBody.substring(hIdx+1).replace(/^[:：]\s*/,'').trim();
             S+='<div data-src-idx="s'+si+'b'+bi+'" style="margin:0 0 24px">';
             S+='<div style="font-size:18px;font-weight:700;color:#111;margin-bottom:12px;'+ff+'">'+autoNum+(autoNum?' ':'')+esc(proseSubPlain)+'</div>';
-            S+='<p style="color:#222;margin:0;font-size:16px;line-height:1.8;font-weight:400">'+proseAfter+'</p>';
+            S+='<p style="color:#222;margin:0;font-size:15px;line-height:1.8;font-weight:400">'+proseAfter+'</p>';
             S+='</div>';
           } else {
-            S+='<p data-src-idx="s'+si+'b'+bi+'" style="color:#222;margin:0 0 20px;font-size:16px;line-height:1.8;font-weight:400">'+proseBody+'</p>';
+            S+='<p data-src-idx="s'+si+'b'+bi+'" style="color:#222;margin:0 0 20px;font-size:15px;line-height:1.8;font-weight:400">'+proseBody+'</p>';
           }
         }
       } else {
@@ -1313,30 +1312,26 @@ function buildNL(sections){
           /* 스토리텔링형: 카드 스타일 — 소제목 배너 + 본문 */
           S+='<div data-src-idx="s'+si+'b'+bi+'" style="margin:0 0 24px;border:1.5px solid #ebebeb;border-radius:12px;overflow:hidden">';
           S+='<div style="background:#FBFBFF;color:#3B48CC;font-size:15px;font-weight:800;padding:12px 20px;letter-spacing:-0.3px;'+ff+'">'+esc(subTitle)+'</div>';
-          if(bodyContent)S+='<div style="padding:18px 20px"><p style="color:#222;margin:0;font-size:16px;line-height:1.8">'+bodyContent+'</p></div>';
+          if(bodyContent)S+='<div style="padding:18px 20px"><p style="color:#222;margin:0;font-size:15px;line-height:1.8">'+bodyContent+'</p></div>';
           S+='</div>';
         } else {
           S+='<div data-src-idx="s'+si+'b'+bi+'" style="margin:0 0 28px">';
           S+='<div style="font-size:18px;font-weight:700;color:#111;margin-bottom:6px;'+ff+'">'+esc(subTitle)+'</div>';
-          if(bodyContent)S+='<p style="color:#222;margin:0;font-size:16px;line-height:1.8">'+bodyContent+'</p>';
+          if(bodyContent)S+='<p style="color:#222;margin:0;font-size:15px;line-height:1.8">'+bodyContent+'</p>';
           S+='</div>';
         }
       } else {
         if(isStory){
           /* 스토리텔링형: 소제목 없는 본문 (마무리 등) — 카드 없이 */
-          S+='<p data-src-idx="s'+si+'b'+bi+'" style="color:#222;margin:0 0 16px;font-size:16px;line-height:1.8">'+bodyText+'</p>';
+          S+='<p data-src-idx="s'+si+'b'+bi+'" style="color:#222;margin:0 0 14px;font-size:15px;line-height:1.8">'+bodyText+'</p>';
         } else {
-          S+='<p data-src-idx="s'+si+'b'+bi+'" style="color:#222;margin:0 0 12px;font-size:16px;line-height:1.8">'+bodyText+'</p>';
+          S+='<p data-src-idx="s'+si+'b'+bi+'" style="color:#222;margin:0 0 14px;font-size:15px;line-height:1.8">'+bodyText+'</p>';
         }
       }
       } /* end isProse else */
     }
 
-    /* 매거진형: 섹션 끝에 "OO 업종 전체 데이터 확인하기" 링크 */
-    if(isMagazine&&sec.url){
-      var magLinkLabel=window._magLastUsedLabel||sec.tag;
-      S+='<a href="'+esc(sec.url)+'" target="_blank" style="display:inline-block;margin-top:14px;font-size:12px;font-weight:700;color:#0a0a0a !important;text-decoration:none !important;border-bottom:1.5px solid #0a0a0a;padding-bottom:1px;letter-spacing:0.5px"><span style="color:#0a0a0a">'+esc(magLinkLabel)+' 업종 전체 데이터 확인하기 →</span></a>';
-    }
+    /* 매거진형: 링크는 DATA-FORECAST POINT 박스 안에 포함됨 — 별도 렌더링 불필요 */
 
     /* 인사이트 요약 박스 — 매거진형에서는 제외 */
     if(ai.insightBox&&!isMagazine){
@@ -1590,7 +1585,7 @@ function stibeeHTML(){
   var nlColor=NL.style.color||'#222';
   var nlLH=NL.style.lineHeight||'1.8';
   var nlLS=NL.style.letterSpacing||'-0.27px';
-  var nlFS=NL.style.fontSize||'16px';
+  var nlFS=NL.style.fontSize||'15px';
   var nlFF='Noto Sans KR,Pretendard,Apple SD Gothic Neo,sans-serif';
   /* 이메일 클라이언트는 CSS 상속 미지원 → 텍스트 요소에 직접 주입 */
   clone.querySelectorAll('p,div,span,td,li,h1,h2,h3,h4,h5,h6').forEach(function(el){
