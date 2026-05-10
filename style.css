@@ -495,3 +495,8 @@ body.sns-mode{background-image:linear-gradient(160deg,#EBF2FA 0%,#E8EFF8 25%,#EF
 @media(max-width:800px){.sns-candidates-wrap{padding:16px 16px}.sns-cards-inner{flex-direction:column}.sns-card{width:100%;flex:none}}
 /* 큰 화면 — 아래 여백 추가 */
 @media(min-width:1400px){.sns-candidates-wrap{padding-bottom:80px}}
+
+/* 매거진형 블랙 박스 — 호버 시 삭제 버튼 */
+.mag-stat-box{position:relative}
+.mag-stat-box .mag-stat-del{position:absolute;top:8px;right:10px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.2);color:#fff;font-size:12px;border-radius:4px;cursor:pointer;opacity:0;transition:opacity .15s;border:none;line-height:1}
+.mag-stat-box:hover .mag-stat-del{opacity:1}

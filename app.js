@@ -166,7 +166,7 @@ function makeUrlRow(){
     +'</div>'
     +'<div style="display:flex;gap:6px;align-items:center">'
     +'<select class="url-tag-select"><option value="auto">🏷 플랫폼 자동분류</option><option value="아이지에이웍스">아이지에이웍스</option><option value="디파이너리">디파이너리</option><option value="트레이딩웍스360">트레이딩웍스360</option><option value="모바일인덱스INSIGHT">모바일인덱스INSIGHT</option><option value="TVIndex">TVIndex</option><option value="Fixfolio">Fixfolio</option><option value="Fixtype">Fixtype</option></select>'
-    +'<select class="url-style-select"><option value="subtitle">📝 소제목형</option><option value="prose">📄 줄글형</option></select>'
+    +'<select class="url-style-select"><option value="subtitle">📝 소제목형</option><option value="prose">📄 줄글형</option><option value="story">📖 스토리텔링형</option><option value="magazine">📰 매거진형</option></select>'
     +'<input type="text" class="url-volume-input" placeholder="분량 (예: 소제목 3개)">'
     +'</div>'
     +'<input type="url" class="url-tracking-input" placeholder="&#128279; 트래킹 링크 (이미지 클릭 시 이동 URL)">'
@@ -393,9 +393,11 @@ function buildPrompt(volText){
     +'- ★ 앞쪽 [본문] 2~3개에서는 핵심 수치와 데이터를 구체적으로 언급하고, 뒤쪽 [본문]으로 갈수록 "더 자세한 내용은 원문에서" 느낌으로 궁금증을 남겨. 모든 데이터를 다 풀지 마.\n\n'
     +'# 분량\n'+g+'\n\n'
     +'# 출력 형식 (태그와 내용을 반드시 같은 줄에!)\n\n'
-    +'[제목] 후킹하는 제목 2줄 (이모지 1개). 반드시 줄바꿈(<br>)으로 2줄 구성. 1줄은 핵심 수치나 충격적 사실, 2줄은 궁금증 유발. 클릭하고 싶게 만들어! 예: "📊 MAU 1538만 명, 역대 최고!<br>증권 앱에 무슨 일이 벌어진 걸까?"\n'
-    +'[제목B] 데이터 강조형 제목 2줄. 핵심 수치를 제목에 넣어. 반드시 작성! 예: "📊 MAU 1538만 명 돌파!<br>증권 앱 시장이 폭발했습니다"\n'
-    +'[제목C] 클릭 유도형 제목 2줄. 궁금증/질문 형식. 반드시 작성! 예: "🤔 가상화폐 앱 사용시간이 60% 줄었다?<br>투자자들은 어디로 갔을까"\n'
+    +'[제목] 호기심 갭형 — 핵심 정보를 살짝만 보여주고 나머지를 궁금하게. 2줄(<br>). 이모지 1개. 예: "📊 증권 앱 MAU가 역대 최고를 찍었습니다<br>그런데 진짜 주역은 예상 밖이었어요"\n'
+    +'[제목B] 숫자 충격형 — 임팩트 있는 수치를 전면에. 2줄(<br>). 이모지 1개. 예: "🚀 사용시간 123% 폭증, MAU 1538만 명<br>18거래일 만에 벌어진 일"\n'
+    +'[제목C] 질문/반전형 — 독자의 상식을 뒤집는 질문. 2줄(<br>). 이모지 1개. 예: "🤔 MZ세대가 주식 열풍을 이끌었다고요?<br>데이터는 정반대를 말하고 있습니다"\n'
+    +'[제목D] 손실회피형 — 안 읽으면 놓치는 느낌. 2줄(<br>). 이모지 1개. 예: "⚠️ 이 흐름을 모르면 타겟팅이 틀어집니다<br>투자 앱 사용자 지형이 완전히 바뀌었어요"\n'
+    +'[제목E] 대화체형 — 독자에게 직접 말 거는 톤. 2줄(<br>). 이모지 1개. 예: "💬 요즘 주식 앱 켜보셨나요?<br>지금 안 보면 진짜 아까운 데이터입니다"\n'
     +'[소제목] 핵심을 한 문장으로\n'
     +'[도입] 3~5문장. "안녕하세요, 아이지에이웍스입니다."로 시작하지 마! 인사는 별도로 들어감. 아래 구조로 작성:\n① 독자 공감 질문 1줄 — 독자가 지금 겪고 있을 상황이나 고민을 질문으로. 예: "요즘 우리 앱 MAU는 오르는데 매출은 제자리… 혹시 이런 고민 하고 계신가요?"\n② 시장 맥락 1~2줄 — 왜 이게 중요한지 배경 설명. "사실 지금 시장은 ~한 국면에 접어들었습니다."\n③ 오늘 뉴스레터 예고 1줄 — "그래서 오늘은 ~를 데이터로 풀어봤습니다."\n★ 딱딱한 보고서 톤 금지! 대화하듯 자연스럽게.\n'
     +'[본문] 이모지 소제목: 본문 내용 (★ 이모지는 반드시 소제목 맨 앞에! 예: "🔥 코스피 6000 돌파" (O), "코스피 6000 돌파🔥" (X). 콜론 뒤에 바로 본문 3~4문장. 핵심 수치 1~2개만 포함. 군더더기 없이 압축!)\n'
@@ -419,7 +421,11 @@ function buildPrompt(volText){
     +'예시: 원문이 증권/가상화폐/부동산을 다루면 → 증권 2개, 가상화폐 2개, 부동산 1개.\n'
     +'마지막 [본문]은 가볍게 마무리하는 톤으로.\n\n'
     +'# 실제 완성 예시 (이 수준으로 써줘!)\n\n'
-    +'[제목] 💰 코스피 6000 시대!<br>투자 지형이 확 바뀌었어요!\n'
+    +'[제목] 💰 코스피 6000 시대, 투자 앱에 무슨 일이?<br>진짜 주역은 예상 밖이었습니다\n'
+    +'[제목B] 🚀 MAU 1538만 명, 사용시간 123% 폭증!<br>18거래일 만에 벌어진 투자 앱 대이동\n'
+    +'[제목C] 🤔 MZ세대가 주식 열풍을 이끌었다고요?<br>데이터는 정반대를 말하고 있습니다\n'
+    +'[제목D] ⚠️ 이 데이터 모르면 타겟팅 틀어집니다<br>투자 앱 사용자 지형이 완전히 바뀌었어요\n'
+    +'[제목E] 💬 요즘 주변에서 주식 얘기 부쩍 많죠?<br>앱 데이터로 보니 진짜 폭발했더라고요\n'
     +'[소제목] 코스피 상승장 속, 증권 앱은 뜨겁고 가상화폐 앱은 잠잠해졌대요!\n'
     +'[도입] 최근 글로벌 분쟁과 전쟁 리스크로 투자 심리가 요동치는 혼돈의 시기를 지나고 있습니다. 이런 상황 속에서 투자자들이 실제로 어디로 향하고 있는지, 증권·가상화폐·부동산 앱 데이터를 분석해봤습니다. 코스피 6000 돌파 전후로 과연 어떤 변화가 있었을까요?\n'
     +'[본문] 🔥 코스피 6000 돌파, 증권 앱이 폭발했습니다: 코스피가 5000선을 넘어 18거래일 만에 6000선까지 돌파했습니다. 증권 앱 사용 시간이 전년 대비 <strong>123%</strong> 늘었고, MAU도 1247만→1538만 명으로 약 23% 증가했습니다. 증권 앱 시장 전체가 폭발적으로 성장한 것을 확인할 수 있습니다.\n'
@@ -478,9 +484,11 @@ function buildProsePrompt(volText){
     +'- ★ 구분선(---, ───, ━━━ 등) 절대 넣지 마! 문단 사이에 구분선 금지!\n\n'
     +'# 분량\n'+g+'\n\n'
     +'# 출력 형식 (★ 모든 태그 필수! 하나도 빠뜨리지 마!)\n\n'
-    +'[제목] 후킹 제목 2줄. <br>로 구분. 이모지 1개.\n'
-    +'[제목B] 데이터 강조형 2줄. 반드시 작성!\n'
-    +'[제목C] 클릭 유도형 2줄. 반드시 작성!\n'
+    +'[제목] 호기심 갭형 — 핵심 정보를 살짝만 보여주고 나머지를 궁금하게. 2줄(<br>). 이모지 1개.\n'
+    +'[제목B] 숫자 충격형 — 임팩트 있는 수치를 전면에. 2줄(<br>). 이모지 1개.\n'
+    +'[제목C] 질문/반전형 — 독자의 상식을 뒤집는 질문. 2줄(<br>). 이모지 1개.\n'
+    +'[제목D] 손실회피형 — 안 읽으면 놓치는 느낌. 2줄(<br>). 이모지 1개.\n'
+    +'[제목E] 대화체형 — 독자에게 직접 말 거는 톤. 2줄(<br>). 이모지 1개.\n'
     +'[소제목] 짧고 임팩트 있게! 15자 이내. 예: "증권 앱 MAU 역대 최고!", "팬덤이 곧 구매력이다"\n'
     +'[도입] ★★★ 반드시 작성! ★★★ 3~5문장. 인사 넣지 마. 아래 구조로 작성:\n① 독자 공감 질문 1줄 — 독자가 지금 겪고 있을 상황이나 고민을 질문으로. 예: "요즘 우리 앱 MAU는 오르는데 매출은 제자리… 혹시 이런 고민 하고 계신가요?"\n② 시장 맥락 1~2줄 — 왜 이게 중요한지 배경 설명. "사실 지금 시장은 ~한 국면에 접어들었습니다."\n③ 오늘 뉴스레터 예고 1줄 — "그래서 오늘은 ~를 데이터로 풀어봤습니다."\n★ 딱딱한 보고서 톤 금지! 대화하듯 자연스럽게. 이 태그를 빼면 안 돼!\n'
     +'[본문] ❶ 문장형 소제목: 본문 내용 (★ 콜론(:) 필수! 소제목은 이모지 없이 문장형으로! 예: "❶ 단순 MAU를 넘어선 그룹 통합 MAU의 중요성: 본문..." 콜론 뒤 7~10문장. ★ 반드시 ❶부터!)\n'
@@ -498,9 +506,11 @@ function buildProsePrompt(volText){
     +'★ [도입]을 빼먹으면 안 돼! 반드시 작성!\n'
     +'★ [인사이트]의 질문들은 반드시 줄바꿈(\\n)으로 분리!\n\n'
     +'# 실제 완성 예시 (이 수준과 형식으로 써줘!)\n\n'
-    +'[제목] 💰 토스 vs 시중은행, 진짜 승자는?<br>금융 앱 전쟁의 숨겨진 데이터\n'
-    +'[제목B] 📊 KB금융 통합 MAU 1,851만 명!<br>토스와의 격차가 좁혀지고 있습니다\n'
-    +'[제목C] 🤔 토스가 정말 압도적 1위일까?<br>관점을 바꾸면 다른 그림이 보입니다\n'
+    +'[제목] 💰 토스가 압도적 1위라고요?<br>관점을 바꾸면 전혀 다른 그림이 보입니다\n'
+    +'[제목B] 📊 KB금융 통합 MAU 1,851만 명!<br>토스와의 격차, 생각보다 가깝습니다\n'
+    +'[제목C] 🤔 금융 앱 1위가 토스가 아닐 수도 있다면?<br>아무도 안 한 비교를 해봤습니다\n'
+    +'[제목D] ⚠️ 개별 앱 MAU만 보면 놓치는 것<br>금융그룹 단위로 보면 판이 달라집니다\n'
+    +'[제목E] 💬 우리 금융그룹, 토스한테 진짜 지고 있는 걸까?<br>데이터로 확인해봤습니다\n'
     +'[소제목] 토스 vs 금융그룹, 진짜 승부는 지금부터!\n'
     +'[도입] 국내 금융 앱 1위는 늘 토스입니다. 하지만 보통 금융 앱 사용자는 은행, 카드, 증권 앱을 넘나들며 금융 생활을 하죠. 그런데 앱 하나하나를 따로 떼어놓고 숫자를 비교하는 게 정말 의미가 있을까요? 그래서 이번에는 관점을 완전히 바꿔봤습니다. 개별 앱이라는 틀을 벗어나, 각 시중은행의 계열사 앱들을 하나의 금융 그룹으로 묶어 토스와 정면으로 비교해 보았습니다. 과연 각 그룹의 계열사 앱들이 힘을 합치면 토스와의 격차를 얼마나 줄일 수 있을까요?\n'
     +'[본문] ❶ 통합 MAU 비교: 금융그룹의 영향력을 평가할 때, 개별 앱의 MAU만 볼 경우 실제 규모를 제대로 비교하기 어렵습니다. 금융 업종 사용자는 하나의 앱만 사용하기보다, 뱅킹에서 시작해 투자·카드·보험 등 여러 앱을 오가며 금융 활동을 이어가기 때문입니다. 따라서 여러 계열 앱을 보유한 금융그룹의 경우, 중복 사용자를 제거한 그룹별 통합 MAU로 보는 것이 보다 정확한 기준이 됩니다. 통합 MAU 관점에서 바라본 각 그룹의 사용자 기반은 토스와 충분히 경쟁할 수 있는 수준으로 나타났습니다. 특히 <strong>KB금융그룹</strong>은 2025년 1월 1,725만 명에서 2026년 1월 <strong>1,851만 명</strong>으로 확대되며 시중 금융그룹 중 토스(2,094만 명)의 체급에 가장 바짝 다가선 것을 확인할 수 있습니다.\n'
@@ -516,23 +526,257 @@ function buildProsePrompt(volText){
     +'★★★ 출력에 분석 과정, 영어 텍스트, 계획, 메모 등을 절대 포함하지 마! [태그] 형식의 결과물만 출력해! ★★★';
 }
 
+function buildStoryPrompt(volText){
+  var g=volText?'★★★ 사용자 지정 분량: '+volText+'. 반드시 지켜! ★★★':'전체 4~5개 파트. 기승전결 흐름.';
+  return '너는 IGAWorks 뉴스레터 작성자야. 반드시 한국어로 작성해.\n\n'
+    +'# 스토리텔링형 뉴스레터란?\n'
+    +'소제목형처럼 토막토막 끊기지 않고, 줄글형처럼 밋밋하지도 않은 형식이야.\n'
+    +'하나의 큰 이야기를 "기승전결" 흐름으로 풀어가되, 중간중간 다양한 장치를 넣어서 독자가 끝까지 읽게 만들어.\n\n'
+    +'# 핵심 차별점 (소제목형/줄글형과 다른 점)\n'
+    +'1. ★★★ 소제목으로 파트를 나누지 마! 소제목 없이 본문 흐름 안에서 자연스럽게 전환해! ★★★\n'
+    +'2. 파트 전환은 "전환 문장"으로. 예: "그런데 여기서 재밌는 게 있습니다.", "결론부터 말하면요."\n'
+    +'3. 데이터를 "발견"처럼 제시해. "알고 보니", "그런데 여기서", "의외로"\n'
+    +'4. 독자가 "그래서?" "진짜?" 하면서 다음 문단으로 넘어가게 만들어\n'
+    +'5. 짧은 문장(1~2문장)을 독립적으로 써서 임팩트를 줘. 긴 문장만 반복하면 지루해.\n\n'
+    +'# 톤 & 스타일\n'
+    +'- 친구에게 흥미로운 발견을 들려주는 느낌. 보고서 톤 절대 금지.\n'
+    +'- ~습니다체 기반이지만 "~거든요", "~잖아요", "~인데요" 같은 구어체를 적극 활용\n'
+    +'- ★ "~의미합니다", "~시사합니다" 금지! → "~라는 뜻이에요", "~보여주고 있어요"\n'
+    +'- 짧은 문장과 긴 문장을 섞어서 리듬감 만들기. 한 문장짜리 강조도 OK.\n'
+    +'- 중요 키워드만 <strong>키워드</strong>로 감싸기.\n\n'
+    +'# 스토리 아크 (이 흐름을 반드시 따를 것)\n\n'
+    +'## [도입] — 문제 제기 & 공감\n'
+    +'"요즘 이런 거 느끼시지 않나요?" 식으로 독자의 현실에서 시작.\n'
+    +'그리고 "그래서 데이터를 뒤져봤습니다" 로 연결.\n\n'
+    +'## [본문] 파트들 — 스토리 전환형 소제목으로 구분\n'
+    +'각 [본문]은 "이모지 소제목: 본문" 형식.\n'
+    +'소제목은 정보 요약이 아니라 스토리 흐름을 반영하는 전환 문장!\n'
+    +'예: "🔍 일단 숫자부터 보겠습니다", "💡 여기서 반전이 있습니다", "🎯 그래서 이게 왜 중요하냐면"\n\n'
+    +'## [마무리] — 궁금증 남기기 & 유도\n'
+    +'모든 걸 다 풀지 마. "더 깊은 이야기는 원문에서" 느낌으로 끝내.\n\n'
+    +'# 리듬감을 만드는 장치들 (반드시 활용!)\n'
+    +'- 질문 던지기: "과연 그럴까요?", "여기서 퀴즈 하나."\n'
+    +'- 짧은 강조: "결론부터 말하면, 아닙니다." (한 문장으로 끊기)\n'
+    +'- 반전 연결: "그런데요.", "여기서 반전.", "알고 보니"\n'
+    +'- 독자 참여: "한번 맞춰보세요", "예상과 다르죠?"\n'
+    +'- 비유/비교: "마치 ~처럼", "~라고 생각하면 쉽습니다"\n'
+    +'★ 이 장치들을 최소 3~4번은 써야 해! 그래야 줄글형과 차별화됨.\n\n'
+    +'# 규칙\n'
+    +'- 원문에 없는 내용 창작 절대 금지\n'
+    +'- 원문 문장 그대로 복사 금지\n'
+    +'- 불릿/번호 절대 금지. 자연스러운 문장으로만.\n'
+    +'- ★ [본문]에 소제목을 넣어! "소제목: 본문" 형식. 콜론(:) 필수!\n'
+    +'- 소제목은 스토리 흐름을 반영하는 짧은 문장! 정보 요약형 금지!\n'
+    +'  좋은 예: "일단 숫자부터 보겠습니다", "여기서 반전이 있습니다", "그래서 이게 왜 중요하냐면"\n'
+    +'  나쁜 예: "MAU 현황", "사용시간 분석" (← 이건 소제목형이야!)\n'
+    +'- 이모지는 소제목 앞에 1개만. 본문 안에는 넣지 마.\n\n'
+    +'# 분량\n'+g+'\n\n'
+    +'# 출력 형식\n\n'
+    +'[제목] 호기심 갭형 — 핵심 정보를 살짝만 보여주고 나머지를 궁금하게. 2줄(<br>). 이모지 1개. 스토리 느낌으로!\n'
+    +'[제목B] 숫자 충격형 — 임팩트 있는 수치를 전면에. 2줄(<br>). 이모지 1개.\n'
+    +'[제목C] 질문/반전형 — 독자의 상식을 뒤집는 질문. 2줄(<br>). 이모지 1개.\n'
+    +'[제목D] 손실회피형 — 안 읽으면 놓치는 느낌. 2줄(<br>). 이모지 1개.\n'
+    +'[제목E] 대화체형 — 독자에게 직접 말 거는 톤. 2줄(<br>). 이모지 1개.\n'
+    +'[소제목] 핵심을 한 문장으로. 궁금증 유발!\n'
+    +'[도입] ★★★ 반드시 작성! ★★★ 3~5문장. 인사 넣지 마.\n'
+    +'독자 공감 → 시장 맥락 → "그래서 파헤쳐봤습니다" 순서.\n'
+    +'★ 딱딱한 보고서 톤 금지! 대화하듯 자연스럽게.\n'
+    +'[본문] 이모지 스토리소제목: 본문 5~8문장. (배경/상황 설정 파트. 소제목은 "🔍 일단 숫자부터 보겠습니다" 같은 스토리 전환형! 본문 안에서 짧은 강조 문장, 질문, 반전 연결어를 섞어서 리듬감 있게!)\n'
+    +'[본문] 이모지 스토리소제목: 본문 5~8문장. (★ 반전/발견 파트! "💡 여기서 반전이 있습니다" 같은 소제목. 의외의 데이터를 드라마틱하게. 중간에 "결론부터 말하면," 같은 짧은 문장으로 임팩트!)\n'
+    +'[본문] 이모지 스토리소제목: 본문 5~8문장. (인사이트 파트. "🎯 그래서 이게 왜 중요하냐면" 같은 소제목. 실무적 의미를 풀어줘.)\n'
+    +'[본문] 마무리 2~3문장. 소제목 없이. 모든 걸 다 풀지 말고 궁금증 남기기.\n'
+    +'[유도] 1~2문장. 원문 클릭 유도.\n'
+    +'[한줄] 전체 관통 인사이트 1문장.\n'
+    +'[통계] 임팩트 수치 1개 | 설명\n\n'
+    +'★★★ [인사이트] 태그 쓰지 마! 스토리텔링형에는 인사이트 섹션 없음! ★★★\n\n'
+    +'# 실제 완성 예시 (이 수준과 리듬감으로 써줘!)\n\n'
+    +'[제목] 📊 증권 앱 MAU가 역대 최고를 찍었습니다<br>그런데 진짜 이야기는 따로 있어요\n'
+    +'[제목B] 📈 MAU 1538만 명, 사용시간 123% 폭증!<br>코스피 6000 시대의 투자 앱 지각변동\n'
+    +'[제목C] 🤔 주식 앱은 폭발했는데 코인 앱은 왜 조용할까?<br>데이터가 보여주는 의외의 답\n'
+    +'[제목D] ⚠️ 투자 앱 타겟팅, 지금 안 바꾸면 늦습니다<br>사용자 구성이 완전히 뒤집혔어요\n'
+    +'[제목E] 💬 "나만 주식 안 하나?" 싶으셨죠?<br>앱 데이터로 보니 진짜 그랬습니다\n'
+    +'[소제목] 코스피 6000 뒤에 숨겨진 투자 지형 변화\n'
+    +'[도입] 요즘 주변에서 주식 이야기 부쩍 많이 들리지 않나요? 코스피가 6000을 돌파하면서 "나만 안 하나" 싶은 분위기가 퍼지고 있습니다. 그런데 실제로 투자자들의 행동은 어떻게 바뀌었을까요? 증권·가상화폐·부동산 앱 데이터를 통째로 뒤져봤습니다.\n'
+    +'[본문] 🔍 일단 숫자부터 보면, 꽤 놀랍습니다: 코스피가 5000선을 넘어 18거래일 만에 6000까지 돌파했거든요. 이 기간 동안 증권 앱에 무슨 일이 벌어졌냐면요. 사용 시간이 전년 대비 <strong>123%</strong> 늘었습니다. MAU도 1247만에서 1538만 명으로 뛰었고요. 단순히 "좀 늘었다" 수준이 아니에요. 시장 전체가 폭발한 겁니다. 그런데 여기서 재밌는 질문이 하나 생깁니다. 대체 누가 이렇게 몰려온 걸까요?\n'
+    +'[본문] 💡 여기서 반전이 있습니다: 2030 MZ세대가 주도했을 거라고요? 결론부터 말하면, 아닙니다. 이번 상승장의 진짜 주역은 <strong>4050 세대</strong>였습니다. 특히 40대 여성의 사용시간이 1539만에서 2322만 시간으로 급증했어요. 신규 설치도 40대 여성이 약 31만 건으로 1위를 차지했고요. 예상과 다르죠? "주식은 젊은 사람들 놀이"라는 편견이 데이터로 깨지는 순간입니다.\n'
+    +'[본문] 🎯 그래서 이게 왜 중요하냐면: 투자 앱 시장의 타겟이 바뀌고 있다는 신호거든요. 그런데 더 흥미로운 건 반대편 이야기입니다. 가상화폐 앱은 MAU 700만대를 유지했지만, 사용 시간이 5558만에서 2283만 시간으로 <strong>60%</strong> 급감했어요. 사람들이 앱을 지우진 않았는데, 열어보지도 않는 겁니다. 돈이 주식으로 이동한 걸까요, 아니면 다른 이유가 있을까요?\n'
+    +'[본문] 부동산 앱은 이 와중에 조용했습니다. MAU도, 사용시간도, 설치도 거의 변화 없이 제자리. 코스피 상승장과는 완전히 별개의 세계인 셈이죠. 전체 그림을 보면, 지금 투자 시장은 "주식 쏠림" 현상이 뚜렷합니다. 더 자세한 세대별·앱별 데이터가 궁금하다면 원문에서 확인해보세요.\n'
+    +'[유도] 투자 지형 변화의 전체 그림이 궁금하다면, 원문에서 세대별·앱별 상세 데이터를 확인해보세요!\n'
+    +'[한줄] 코스피 6000 시대, 진짜 주역은 MZ가 아니라 4050이었습니다\n'
+    +'[통계] MAU 1538만 명 | 코스피 6000 돌파 후 증권 앱 월간 활성 사용자\n\n'
+    +'★ 위 예시처럼 소제목은 스토리 전환형으로! 색칠 박스 배너로 렌더링됨!\n'
+    +'★ 각 [본문]이 "다음 장"처럼 이어져야 해. 독립된 토막글 금지!\n'
+    +'★★★ 출력에 분석 과정, 영어 텍스트, 계획, 메모 등을 절대 포함하지 마! [태그] 형식의 결과물만 출력해! ★★★';
+}
+
+
+function buildBriefingPrompt(volText){
+  var g=volText?'★★★ 사용자 지정 분량: '+volText+'. 반드시 지켜! ★★★':'업종/주제별 3~5개 섹션. 각 섹션은 핵심 수치 + 인사이트 + 액션 포인트.';
+  return '너는 IGAWorks 데이터 브리핑 뉴스레터 작성자야. 반드시 한국어로 작성해.\n\n'
+    +'# 데이터 브리핑형이란?\n'
+    +'원문의 핵심 데이터를 업종/주제별로 정리해서, 마케터가 빠르게 스캔하고 액션을 잡을 수 있게 구조화한 형식이야.\n'
+    +'카드 UI가 아니라 글 기반이지만, 시각적 위계가 명확해야 해.\n\n'
+    +'# 핵심 원칙\n'
+    +'1. 각 섹션은 "업종/주제명 + 핵심 수치 + 인사이트 + 마케터 액션" 구조\n'
+    +'2. 수치는 구체적으로! "MAU 3,503만", "+189% YoY" 처럼 숫자를 전면에\n'
+    +'3. 인사이트는 "그래서 이게 마케터에게 왜 중요한지"를 1~2문장으로\n'
+    +'4. 액션 포인트는 실무에서 바로 쓸 수 있는 구체적 제안\n'
+    +'5. 전체를 관통하는 공통 키워드/트렌드를 도입에서 제시\n\n'
+    +'# 톤 & 스타일\n'
+    +'- 간결하고 임팩트 있게. 군더더기 없이 핵심만.\n'
+    +'- ~습니다체 기반. 데이터 중심이라 약간 프로페셔널한 톤.\n'
+    +'- 하지만 딱딱하진 않게. "주목할 점은", "흥미로운 건" 같은 표현 OK.\n'
+    +'- 중요 수치는 <strong>수치</strong>로 감싸기.\n'
+    +'- 이모지는 섹션 소제목에만 1개씩.\n\n'
+    +'# 규칙\n'
+    +'- 원문에 없는 내용 창작 절대 금지\n'
+    +'- 원문 문장 그대로 복사 금지\n'
+    +'- 불릿/번호 절대 금지. 자연스러운 문장으로.\n'
+    +'- 각 [본문]은 "이모지 업종/주제명: 본문" 형식. 콜론(:) 필수!\n\n'
+    +'# 분량\n'+g+'\n\n'
+    +'# 출력 형식\n\n'
+    +'[제목] 호기심 갭형 — 2줄(<br>). 이모지 1개.\n'
+    +'[제목B] 숫자 충격형 — 2줄(<br>). 이모지 1개.\n'
+    +'[제목C] 질문/반전형 — 2줄(<br>). 이모지 1개.\n'
+    +'[제목D] 손실회피형 — 2줄(<br>). 이모지 1개.\n'
+    +'[제목E] 대화체형 — 2줄(<br>). 이모지 1개.\n'
+    +'[소제목] 전체를 관통하는 공통 키워드 1문장. 예: "이달의 키워드: 고관여 유저 쟁탈전"\n'
+    +'[도입] 3~5문장. 인사 넣지 마. 전체 데이터를 관통하는 공통 트렌드/키워드를 제시하고, 왜 이게 중요한지 맥락을 깔아줘.\n'
+    +'[본문] 이모지 업종/주제명: 핵심 수치 2~3개를 문장 안에 자연스럽게 녹여서 3~5문장. 그 다음 "인사이트:" 로 시작하는 1~2문장 (이게 왜 중요한지). 마지막에 "액션:" 으로 시작하는 1문장 (마케터가 뭘 해야 하는지).\n'
+    +'[본문] 이모지 업종/주제명: 동일 구조. 수치 → 인사이트 → 액션.\n'
+    +'[본문] 이모지 업종/주제명: 동일 구조.\n'
+    +'[본문] 마무리 2~3문장. 전체 요약 + 원문 유도.\n'
+    +'[유도] 1~2문장. 원문 클릭 유도.\n'
+    +'[한줄] 전체 관통 인사이트 1문장.\n'
+    +'[통계] 가장 임팩트 있는 수치 1개 | 설명\n\n'
+    +'★★★ [인사이트] 태그 쓰지 마! 데이터 브리핑형에는 별도 인사이트 섹션 없음. 각 [본문] 안에 인사이트가 포함됨. ★★★\n\n'
+    +'# [본문] 내부 구조 (반드시 이 순서!)\n'
+    +'1. 핵심 수치 문장 (2~3문장): "MAU <strong>3,503만</strong>으로 1위 유지. 전년 대비 <strong>+189%</strong> 성장하며..." 식으로 수치를 볼드 처리하며 자연스럽게.\n'
+    +'2. 인사이트 문장 (1~2문장): "인사이트:" 로 시작. "인사이트: 표면적 MAU보다 구매 전환 가능성이 핵심 지표입니다."\n'
+    +'3. 액션 문장 (1문장): "액션:" 으로 시작. "액션: 구매력 높은 오디언스를 타깃으로 한 정밀 캠페인 설계가 필요한 시점."\n\n'
+    +'# 실제 완성 예시\n\n'
+    +'[제목] 📊 5개 업종 데이터가 같은 말을 하고 있습니다<br>진짜 승부처가 바뀌었어요\n'
+    +'[제목B] 🚀 배민 이탈자 102만 명이 쿠팡이츠로!<br>5개 업종 핵심 수치 총정리\n'
+    +'[제목C] 🤔 신규 유입이 줄고 있는데 왜 매출은 오를까?<br>데이터가 보여주는 의외의 답\n'
+    +'[제목D] ⚠️ 이 숫자를 모르면 다음 분기 타겟팅이 틀어집니다<br>5개 업종 필수 체크 데이터\n'
+    +'[제목E] 💬 요즘 경쟁사 유저 뺏기 힘드시죠?<br>데이터로 보면 방법이 보입니다\n'
+    +'[소제목] 이달의 키워드: 고관여 유저 쟁탈전\n'
+    +'[도입] 5개 업종 데이터를 관통하는 키워드는 하나입니다. "고관여 유저 쟁탈전". 신규 유입은 줄고 시장은 성숙기에 접어들면서, 마케터의 진짜 승부처는 경쟁사의 헤비 유저를 뺏어오는 것으로 이동하고 있습니다. 업종별로 어떤 숫자가 시장을 결정짓고 있는지 확인하세요.\n'
+    +'[본문] 🛒 이커머스: 쿠팡이 MAU <strong>3,503만</strong>으로 압도적 1위를 유지하고 있지만, 네이버플러스 스토어가 전년 대비 <strong>+189%</strong> 성장하며 판도를 흔들고 있습니다. 쿠팡은 소득 상위 5%, 수입차 오너 등 고소득 오디언스에서 경쟁사 대비 2~4배 높은 점유율을 확보 중입니다. 인사이트: 다수 앱을 동시에 쓰는 멀티호밍 구조에서 표면적 MAU보다 구매 전환 가능성이 핵심 지표입니다. 액션: 단순 리치 확대보다 구매력 높은 오디언스를 타깃으로 한 정밀 캠페인 설계가 필요한 시점.\n'
+    +'[본문] 🛵 배달: 배민 MAU <strong>2,341만</strong>으로 1강 체제 속 쿠팡이츠가 <strong>1,316만</strong>으로 빠르게 추격 중입니다. 배민 이탈자 중 102만 명이 쿠팡이츠로 이동, 반대로 119만 명이 역유입되며 헤비유저 뺏기 게임이 본격화됐습니다. 인사이트: 시장이 포화에 진입해 신규 고객 확보보다 경쟁사 VIP 전환이 더 효율적인 구조가 됐습니다. 액션: 월 20회 이상 VIP 500만 명에 집중, 이탈 징후 포착 후 핀셋 리타겟팅이 가장 효율적인 투자처.\n'
+    +'[본문] 💹 투자: 업비트 MAU <strong>378만</strong>으로 1위지만 키움·미래에셋과 5만 명 이내 초접전 중입니다. 신규 설치가 2월 90만에서 4월 <strong>54만</strong>으로 급감해 신규 유입보다 기존 핵심 투자자 Lock-in이 더 중요해졌습니다. 인사이트: 금융 이용시간 상위 20% 801만 명이 진짜 타깃입니다. 액션: 리텐션 전략 강화 시점. 신규 설치 후 초기 습관 형성 캠페인에 집중.\n'
+    +'[본문] 전체적으로 5개 업종 모두 "신규 유입 감소 + 기존 유저 쟁탈전 심화"라는 동일한 패턴을 보이고 있습니다. 더 상세한 업종별 차트와 교차 사용 데이터가 궁금하다면 원문에서 확인해보세요.\n'
+    +'[유도] 업종별 상세 데이터와 AI 미래 고객 예측 지표까지, 전체 Data-Forecast 리포트에서 확인하세요!\n'
+    +'[한줄] 5개 업종 공통 신호: 신규 유입은 줄고, 헤비유저 쟁탈전이 시작됐습니다\n'
+    +'[통계] 102만 명 | 배민에서 쿠팡이츠로 이동한 월간 이탈 유저 수\n\n'
+    +'★ 위 예시처럼 각 [본문]에 수치→인사이트→액션 구조를 반드시 지켜!\n'
+    +'★★★ 출력에 분석 과정, 영어 텍스트, 계획, 메모 등을 절대 포함하지 마! [태그] 형식의 결과물만 출력해! ★★★';
+}
+
+function buildMagazinePrompt(volText){
+  var g=volText?'★★★ 사용자 지정 분량: '+volText+'. 반드시 지켜! ★★★':'[라벨]+[본문]+[서브]+[통계]+[팁] 세트를 2~3개 작성. 각 [본문]은 1문단(4~5문장)으로 짧고 임팩트 있게!';
+  return '너는 IGAWorks의 에디토리얼 뉴스레터 작성자야. 반드시 한국어로 작성해.\n\n'
+    +'# 매거진형 뉴스레터란?\n'
+    +'데이터 기반 인사이트를 매거진/에디토리얼 톤으로 풀어내는 형식이야.\n'
+    +'일반 뉴스레터보다 깊이 있고, 보고서보다 읽기 쉬운 중간 지점.\n'
+    +'독자가 "이건 저장해둬야겠다"고 느끼게 만들어야 해.\n\n'
+    +'# 톤 & 스타일\n'
+    +'- 전문적이지만 딱딱하지 않은 에디토리얼 톤. 경제지 칼럼 느낌.\n'
+    +'- ~습니다체 기반. "~인데요", "~거든요" 같은 구어체는 최소화.\n'
+    +'- 데이터를 해석하고 의미를 부여하는 관점이 핵심.\n'
+    +'- "이 숫자가 왜 중요한가"를 항상 설명해.\n'
+    +'- 중요 키워드만 <strong>키워드</strong>로 감싸기.\n'
+    +'- ★ 각 [본문]의 소제목은 2줄! <br>로 줄바꿈. 임팩트 있는 문장형으로.\n\n'
+    +'# 매거진 구조\n\n'
+    +'## [도입] — 에디토리얼 오프닝\n'
+    +'시장 전체를 관통하는 하나의 메시지로 시작.\n'
+    +'"올해 들어 ~한 신호가 반복되고 있습니다" 식의 큰 그림.\n'
+    +'마지막 문장에서 "각 업종에서 어떤 숫자가 시장을 결정짓는지 살펴봤습니다" 로 연결.\n\n'
+    +'## [본문] — 업종/주제별 딥 섹션\n'
+    +'각 [본문]은 하나의 주제를 깊이 있게 다뤄.\n'
+    +'소제목(2줄) → 서브헤드(핵심 수치 나열) → 본문(2~3문단) → [통계](풀아웃 숫자) → [팁](마케터 액션)\n\n'
+    +'## [마무리] — 전체 관통 메시지\n'
+    +'모든 섹션을 관통하는 하나의 결론으로 마무리.\n\n'
+    +'# 규칙\n'
+    +'- 원문에 없는 내용 창작 절대 금지\n'
+    +'- 원문 문장 그대로 복사 금지\n'
+    +'- 불릿/번호 절대 금지. 자연스러운 문장으로만.\n'
+    +'- 이모지 절대 금지! 매거진형은 이모지 없이 텍스트만.\n'
+    +'- ★ 소제목은 반드시 2줄! <br>로 줄바꿈. 예: "쿠팡의 1강은 여전하지만,<br>판도를 흔드는 변수가 왔다"\n\n'
+    +'# 분량\n'+g+'\n\n'
+    +'# 출력 형식 (★ 모든 태그 필수!)\n\n'
+    +'# ★★★ 제목 작성법 (가장 중요!) ★★★\n'
+    +'제목은 오픈율을 결정하는 핵심이야. 각 전략별로 완전히 다른 접근을 해!\n'
+    +'- 반드시 2줄(<br>로 구분). 1줄은 15자 이내로 짧게!\n'
+    +'- 이모지 1개 허용 (맨 앞에만)\n'
+    +'- 구체적 수치를 넣으면 클릭률 올라감\n'
+    +'- "~합니다" 같은 딱딱한 종결 금지. "~했다", "~이다", "~일까?" 같은 짧은 종결로!\n\n'
+    +'[제목] 호기심 갭형 — 핵심을 살짝만 보여주고 나머지를 궁금하게. 2줄(<br>). 예: "📊 MAU 3,503만인데도 위기라고?<br>쿠팡이 진짜 두려워하는 숫자"\n'
+    +'[제목B] 숫자 충격형 — 가장 임팩트 있는 수치를 전면에. 2줄(<br>). 예: "🚀 190% 성장, 네이버가 쿠팡을 쫓는다<br>이커머스 판도가 뒤집히고 있다"\n'
+    +'[제목C] 질문/반전형 — 독자의 상식을 뒤집는 질문. 2줄(<br>). 예: "🤔 1위가 3,500만 명인데 왜 불안할까?<br>진짜 위협은 MAU가 아니었다"\n'
+    +'[제목D] 손실회피형 — 안 읽으면 놓치는 느낌. 2줄(<br>). 예: "⚠️ 이 데이터 모르면 타겟팅 다 틀어진다<br>고객 이동 지도가 완전히 바뀌었다"\n'
+    +'[제목E] 대화체형 — 독자에게 직접 말 거는 톤. 2줄(<br>). 예: "💬 우리 VIP 고객, 경쟁사로 넘어가고 있어요<br>지금 확인 안 하면 늦습니다"\n'
+    +'[소제목] 전체 관통 메시지 한 문장. 이모지 없이!\n'
+    +'[도입] 3~5문장. 에디토리얼 오프닝. 시장 전체를 관통하는 큰 그림.\n'
+    +'[라벨] 업종명 (예: 이커머스, 투자, 배달, 여행, 패션). 각 [본문] 바로 앞에 반드시 작성!\n'
+    +'[본문] 소제목 2줄(<br>로 줄바꿈): 본문 2~3문단. (★ 소제목은 임팩트 있는 문장형 2줄! 콜론(:) 뒤에 본문. 본문은 데이터 해석 + 의미 부여 중심.)\n'
+    +'[서브] 핵심 수치 요약 1줄. 예: "쿠팡 MAU 3,503만 · 네이버플러스 YoY +189%". 각 [본문] 바로 뒤에!\n'
+    +'[통계] 임팩트 수치 | 설명. 예: "801만 명 | 금융 이용시간 상위 20% 헤비 유저"\n'
+    +'[팁] 마케터 액션 포인트 2~3문장. 실무적 시사점.\n'
+    +'[본문] 소제목 2줄: 본문 2~3문단\n'
+    +'[서브] 수치 요약\n'
+    +'[통계] 수치 | 설명\n'
+    +'[팁] 마케터 액션\n'
+    +'[본문] 소제목 2줄: 본문 2~3문단\n'
+    +'[서브] 수치 요약\n'
+    +'[팁] 마케터 액션\n'
+    +'[유도] 1~2문장. 원문 클릭 유도.\n'
+    +'[한줄] 전체 관통 인사이트 1문장.\n\n'
+    +'# 실제 완성 예시\n\n'
+    +'[제목] 지금 시장은 새 고객이 아니라<br>남의 고객을 탐낸다\n'
+    +'[제목B] MAU 3,503만 vs 190% 성장률<br>이커머스 판도가 재편되고 있습니다\n'
+    +'[제목C] 신규 설치가 줄고 있는데<br>왜 시장은 더 뜨거워졌을까?\n'
+    +'[제목D] 이 숫자를 모르면 타겟팅이 틀어집니다<br>고관여 유저 쟁탈전이 시작됐습니다\n'
+    +'[제목E] 우리 고객이 경쟁사로 넘어가고 있다면<br>지금 확인해야 할 데이터가 있습니다\n'
+    +'[소제목] 신규 유입의 시대는 끝났고, 고관여 유저 쟁탈전이 본격화됐습니다\n'
+    +'[도입] 올해 들어 업종을 막론하고 비슷한 신호가 반복되고 있습니다. 신규 설치는 줄고, 시장 1·2위 간 격차는 좁혀지고, 유저들은 한 앱에 정착하지 않고 여러 플랫폼을 오갑니다. 데이터를 들여다보면 결론은 하나입니다. <strong>이제 마케터의 전쟁터는 획득이 아니라 빼앗기입니다.</strong> 각 업종에서 지금 어떤 숫자가 시장을 결정짓고 있는지 살펴봤습니다.\n'
+    +'[라벨] 이커머스\n'
+    +'[본문] 쿠팡의 1강은 여전하지만,<br>판도를 흔드는 변수가 왔다: 쿠팡은 MAU 3,503만 명으로 독보적인 1위를 유지하고 있습니다. 그런데 이 숫자보다 더 눈에 띄는 건 따로 있습니다. 네이버플러스 스토어가 전년 동기 대비 약 190% 성장하며 상위권 판도를 빠르게 재편하고 있다는 겁니다. 이커머스 시장은 멀티호밍이 강한 곳입니다. 이 구조에서 단순 MAU보다 더 중요한 건 <strong>구매력 높은 오디언스를 누가 먼저 잡느냐</strong>입니다. 쿠팡은 소득 상위 5%, 수입차 오너 등 고구매력 세그먼트에서 경쟁사 대비 2~4배 높은 점유율을 보이고 있습니다.\n'
+    +'[서브] 쿠팡 MAU 3,503만 · 네이버플러스 YoY +189% · 쇼핑 VIP 91% 쿠팡 유저\n'
+    +'[통계] 3,503만 명 | 쿠팡 MAU — 2위와 2배 이상 격차\n'
+    +'[팁] 단순 리치 확대보다 구매력 높은 오디언스를 타깃으로 한 정밀 캠페인이 필요합니다. 멀티호밍 유저가 어느 순간 한 플랫폼에 정착할지 모르는 만큼, 지금이 고관여 유저의 이탈을 막을 최적 타이밍입니다.\n'
+    +'[라벨] 배달\n'
+    +'[본문] 매달 100만 명이<br>두 앱 사이를 오간다: 배달의민족이 2,341만 명으로 1강을 지키고 있지만, 쿠팡이츠는 1,316만 명까지 올라서며 격차를 좁히는 중입니다. 진짜 흥미로운 데이터는 이탈 지표에 있습니다. 배민에서 이탈한 약 402만 명 중 102만 명이 쿠팡이츠로 넘어갔습니다. 반대로 쿠팡이츠에서도 119만 명이 배민으로 역유입됐습니다. 이미 시장은 <strong>기존 헤비 유저를 뺏고 빼앗기는 제로섬 게임의 정점</strong>에 들어섰습니다.\n'
+    +'[서브] 배민 MAU 2,341만 · 쿠팡이츠 1,316만 · VIP 500만 명(월 20회↑)\n'
+    +'[통계] 500만 명 | 월 20회 이상 주문 VIP — 매출의 핵심\n'
+    +'[팁] 월 20회 이상 주문하는 VIP 500만 명이 매출의 핵심입니다. 이 그룹 중 이탈 징후가 보이는 유저를 선별해 핀셋 리타겟팅하는 것이 지금 가장 효율적인 마케팅 투자처입니다.\n'
+    +'[유도] 업종별 상세 차트와 교차 사용 데이터가 궁금하다면, 전체 리포트에서 확인하세요.\n'
+    +'[한줄] 신규 유입의 시대는 끝났고, 고관여 유저 쟁탈전이 본격화됐습니다\n\n'
+    +'★ 위 예시처럼 에디토리얼 톤으로! 이모지 없이!\n'
+    +'★ [서브]는 각 [본문] 바로 뒤에! 핵심 수치를 · 로 구분해서 나열!\n'
+    +'★ [통계]는 가장 임팩트 있는 숫자 1개만! "숫자 | 설명" 형식!\n'
+    +'★ [팁]은 실무적 마케터 액션! 2~3문장!\n'
+    +'★★★ 출력에 분석 과정, 영어 텍스트, 계획, 메모 등을 절대 포함하지 마! [태그] 형식의 결과물만 출력해! ★★★';
+}
 
 function aiRewrite(paras,title,volumeText,writeStyle,url,totalUrls){
   var key=getKey();if(!key)return Promise.reject(new Error('NO_KEY'));
   localStorage.setItem('gemini-api-key',key);
-  var sysPrompt=(writeStyle==='prose')?buildProsePrompt(volumeText):buildPrompt(volumeText);
+  var sysPrompt=(writeStyle==='prose')?buildProsePrompt(volumeText):(writeStyle==='story')?buildStoryPrompt(volumeText):(writeStyle==='magazine')?buildMagazinePrompt(volumeText):(writeStyle==='briefing')?buildBriefingPrompt(volumeText):buildPrompt(volumeText);
   var volInstruction=volumeText?'\n\n★★★ 분량 지시: '+volumeText+'. 이 분량을 반드시 지켜주세요! 기본 규칙보다 이 분량이 우선입니다. ★★★':'';
   /* URL 개수에 따른 자동 분량 조절 (사용자 지정 분량이 없을 때만) */
   if(!volumeText&&totalUrls){
     if(totalUrls===1){
-      if(writeStyle==='prose')volInstruction+='\n\n★★★ URL 1개 단독 콘텐츠입니다. [본문] 정확히 4개! 각 7~10문장으로 충분히 길게! ★★★';
+      if(writeStyle==='prose'||writeStyle==='story')volInstruction+='\n\n★★★ URL 1개 단독 콘텐츠입니다. [본문] 정확히 4개! 각 7~10문장으로 충분히 길게! ★★★';
+      else if(writeStyle==='magazine')volInstruction+='\n\n★★★ URL 1개 단독 콘텐츠입니다. [라벨]+[본문]+[서브]+[통계]+[팁] 세트를 2~3개 작성! 각 [본문]은 1문단(4~5문장). 원문의 핵심 포인트별로 파트를 나눠! ★★★';
       else volInstruction+='\n\n★★★ URL 1개 단독 콘텐츠입니다. [본문] 4개 이상 6개 이하로 작성! 각 [본문]은 4~6줄. ★★★';
     } else {
-      if(writeStyle==='prose')volInstruction+='\n\n★★★ 여러 URL 중 하나입니다. [본문] 2~3개! 각 7~10문장. ★★★';
+      if(writeStyle==='prose'||writeStyle==='story')volInstruction+='\n\n★★★ 여러 URL 중 하나입니다. [본문] 2~3개! 각 7~10문장. ★★★';
+      else if(writeStyle==='magazine')volInstruction+='\n\n★★★ 여러 URL 중 하나입니다. [라벨]+[본문]+[서브]+[통계]+[팁] 세트를 1~2개만! 각 [본문]은 1문단(4~5문장). 짧고 핵심만! ★★★';
       else volInstruction+='\n\n★★★ 여러 URL 중 하나입니다. [본문] 1개 이상 4개 이하로 작성! 각 [본문]은 3~4줄. ★★★';
     }
   }
-  var styleHint=writeStyle==='prose'?'줄글(산문) 형식으로 작성해주세요. 이모지 소제목 금지.':'소제목+이모지 형식으로 작성해주세요.';
+  var styleHint=writeStyle==='prose'?'줄글(산문) 형식으로 작성해주세요. 이모지 소제목 금지.':writeStyle==='story'?'스토리텔링 형식으로 작성해주세요. 하나의 이야기처럼 자연스럽게 흘러가게.':writeStyle==='magazine'?'매거진/에디토리얼 형식으로 작성해주세요. 이모지 없이, 데이터 해석 중심의 깊이 있는 톤으로.':writeStyle==='briefing'?'데이터 브리핑 형식으로 작성해주세요. 업종/주제별로 핵심 수치+인사이트+액션 구조.':'소제목+이모지 형식으로 작성해주세요.';
   /* URL이 있으면 Gemini가 직접 읽도록 URL만 전달, 없으면 파싱 텍스트 fallback */
   /* 프록시 텍스트 준비 — urlTools 결정보다 먼저 */
   var orig=paras.map(function(p){return(p.isH?'## ':'')+p.text;}).join('\n\n');
@@ -619,6 +863,8 @@ function parseAI(text,title){
       if(cleaned.length>5){r.insightBox+=(r.insightBox?'\n':'')+cleaned;}
       lastTag='인사이트';
     }
+    else if(t.indexOf('[제목E]')===0){r.titleE=t.replace('[제목E]','').trim();lastTag='제목E';}
+    else if(t.indexOf('[제목D]')===0){r.titleD=t.replace('[제목D]','').trim();lastTag='제목D';}
     else if(t.indexOf('[제목C]')===0){r.titleC=t.replace('[제목C]','').trim();lastTag='제목C';}
     else if(t.indexOf('[제목B]')===0){r.titleB=t.replace('[제목B]','').trim();lastTag='제목B';}
     else if(t.indexOf('[제목]')===0){r.title=t.replace('[제목]','').trim();lastTag='제목';}
@@ -647,7 +893,10 @@ function parseAI(text,title){
     }
     else if(t.indexOf('[유도]')===0){r.redirect=t.replace('[유도]','').trim();lastTag='유도';}
     else if(t.indexOf('[한줄]')===0){r.oneliner=t.replace('[한줄]','').trim();lastTag='한줄';}
-    else if(t.indexOf('[통계]')===0){var sp=t.replace('[통계]','').trim().split('|');r.stat={num:(sp[0]||'').trim(),label:(sp[1]||'').trim()};lastTag='통계';}
+    else if(t.indexOf('[통계]')===0){var sp=t.replace('[통계]','').trim().split('|');r.stat={num:(sp[0]||'').trim(),label:(sp[1]||'').trim()};r.body.push('__STAT__'+(sp[0]||'').trim()+'|'+(sp[1]||'').trim());lastTag='통계';}
+    else if(t.indexOf('[서브]')===0){r.body.push('__SUB__'+t.replace('[서브]','').trim());lastTag='서브';}
+    else if(t.indexOf('[팁]')===0){r.body.push('__TIP__'+t.replace('[팁]','').trim());lastTag='팁';}
+    else if(t.indexOf('[라벨]')===0){r.body.push('__LABEL__'+t.replace('[라벨]','').trim());lastTag='라벨';}
     /* 태그 없는 줄 → 직전 태그에 이어붙이기 (AI thinking 텍스트 필터링) */
     else if(t.charAt(0)!=='['&&t.length>5){
       /* Gemini thinking/planning 텍스트 무시 */
@@ -748,7 +997,12 @@ function buildNL(sections){
   /* 구분선 */
   S+='<div style="border-top:1px solid #D5D2CA;margin:20px 0 18px"></div>';
 
-  /* 이번 주 주요 인사이트 목차 — div 기반 (편집 가능) */
+  /* 이번 주 주요 인사이트 목차 — 매거진형에서는 제외 */
+  var _isMagMode=sections[0]&&sections[0].writeStyle==='magazine';
+  if(_isMagMode){
+    /* 매거진형: 인트로 박스 여기서 닫기 */
+    S+='</div>';
+  } else {
   S+='<div>';
   /* 이메일 호환: display:table 사용 (flex 대신) */
   S+='<div style="display:table;width:100%;border-collapse:collapse;margin-bottom:14px">';
@@ -767,16 +1021,19 @@ function buildNL(sections){
   }
 
   S+='</div>';
-  S+='</div>';
+  S+='</div>'; /* 인트로 박스 닫기 (비매거진) */
+  } /* end if/else _isMagMode */
 
   /* === SECTIONS === */
+  if(_isMagMode)window._magSectionIdx=0;
   for(var si=0;si<sections.length;si++){
     var sec=sections[si],ai=sec.ai,data=sec.data;
 
     /* 섹션 래퍼 (드래그 순서 변경용) */
     S+='<div data-section="'+si+'" data-track-url="'+esc(sec.trackingUrl||'')+'" style="position:relative">';
 
-    /* 구분선 + 태그 라인 */
+    /* 구분선 + 태그 라인 — 매거진형에서는 제외 (자체 라벨 사용) */
+    if(!isMagazine){
     S+='<div data-sec-hdr="1" style="border-top:1px solid #D5D2CA;margin:36px 0 0;padding-top:20px">';
     S+='<div style="display:inline-block;font-size:11px;font-weight:700;color:#3B48CC;background:#FBFBFF;padding:4px 12px;border-radius:4px;letter-spacing:0.5px;margin-bottom:16px;border:1px solid #E5E7EB">'+esc(sec.tag);
     S+='</div></div>';
@@ -786,6 +1043,7 @@ function buildNL(sections){
     if(secTitle){
       S+='<div style="font-size:20px;font-weight:800;color:#111;line-height:1.4;margin:0 0 20px;word-break:keep-all">'+cleanBr(secTitle)+'</div>';
     }
+    } /* end !isMagazine */
 
     var secTrackLink=sec.trackingUrl||'';
 
@@ -793,7 +1051,11 @@ function buildNL(sections){
 
     /* 본문 */
     var isProse=(sec.writeStyle==='prose');
+    var isStory=(sec.writeStyle==='story');
+    var isMagazine=(sec.writeStyle==='magazine');
+    var storyBannerColor='#3B48CC';
     if(isProse)window._proseBodyIdx=0;
+    if(isMagazine&&!window._magSectionIdx)window._magSectionIdx=0;
     for(var bi=0;bi<ai.body.length;bi++){
       var bodyText=ai.body[bi];
       /* ◾■▪ 불릿 + 번호 제거 */
@@ -808,7 +1070,83 @@ function buildNL(sections){
       var strongLen=0;if(strongContent)strongContent.forEach(function(s){strongLen+=s.replace(/<[^>]+>/g,'').length;});
       if(plainLen>0&&strongLen/plainLen>0.7)bodyText=bodyText.replace(/<\/?strong>/g,'');
 
-      if(isProse){
+      if(isMagazine){
+        /* 매거진형 렌더링 */
+        if(bodyText.indexOf('__LABEL__')===0){
+          /* [라벨] — 다음 본문의 업종 라벨로 저장 */
+          window._magNextLabel=bodyText.replace('__LABEL__','').trim();
+          continue;
+        } else if(bodyText.indexOf('__SUB__')===0){
+          /* [서브] — 수치 요약 라인 (소제목 바로 밑) */
+          var subText=bodyText.replace('__SUB__','').trim();
+          S+='<div data-src-idx="s'+si+'b'+bi+'" style="font-size:13px;color:#888;margin:0 0 20px;font-style:italic;'+ff+'">'+subText+'</div>';
+        } else if(bodyText.indexOf('__TIP__')===0){
+          /* [팁] — Data-Forecast Point 박스 */
+          var tipText=bodyText.replace('__TIP__','').trim();
+          S+='<div data-src-idx="s'+si+'b'+bi+'" style="margin:18px 0 28px;padding:16px 20px;background:#FBFBFF;border-radius:4px;border:1px solid #E5E7EB;position:relative;'+ff+'" class="mag-stat-box">';
+          S+='<button class="mag-stat-del" onclick="this.parentElement.remove()" title="삭제" style="color:#3B48CC">✕</button>';
+          S+='<div style="font-size:12px;font-weight:800;letter-spacing:2px;color:#3B48CC;margin-bottom:8px">DATA-FORECAST POINT</div>';
+          S+='<p style="margin:0;font-size:15px;color:#333;line-height:1.9">'+tipText+'</p>';
+          S+='</div>';
+        } else if(bodyText.indexOf('__STAT__')===0){
+          /* [통계] — 풀아웃 숫자 박스 */
+          var statParts=bodyText.replace('__STAT__','').split('|');
+          var statNum=(statParts[0]||'').trim();
+          var statLabel=(statParts[1]||'').trim();
+          S+='<div data-src-idx="s'+si+'b'+bi+'" data-el="box" style="margin:20px 0;padding:20px 24px;background:#0a0a0a;border-radius:6px;display:table;width:100%;position:relative" class="mag-stat-box">';
+          S+='<button class="mag-stat-del" onclick="this.parentElement.remove()" title="삭제">✕</button>';
+          S+='<span style="display:table-cell;vertical-align:middle;font-size:36px;font-weight:900;color:#fff;letter-spacing:-1px;line-height:1;padding-right:16px;white-space:nowrap">'+esc(statNum)+'</span>';
+          S+='<span style="display:table-cell;vertical-align:middle;font-size:14px;color:#aaa;line-height:1.5">'+esc(statLabel)+'</span>';
+          S+='</div>';
+        } else {
+          /* 일반 [본문] — 소제목 분리 */
+          var magPlain=bodyText.replace(/<[^>]+>/g,'').trim();
+          var magColonIdx=magPlain.indexOf(':');
+          if(magColonIdx===-1)magColonIdx=magPlain.indexOf('：');
+          var magSubTitle='',magBody=bodyText;
+          if(magColonIdx>5&&magColonIdx<80){
+            magSubTitle=magPlain.substring(0,magColonIdx).trim();
+            /* HTML에서 콜론 위치 찾기 */
+            var mhIdx=0,mcIdx=0;
+            for(mhIdx=0;mhIdx<bodyText.length;mhIdx++){
+              if(bodyText[mhIdx]==='<'){while(mhIdx<bodyText.length&&bodyText[mhIdx]!=='>')mhIdx++;continue;}
+              if(mcIdx>=magColonIdx)break;
+              mcIdx++;
+            }
+            magBody=bodyText.substring(mhIdx+1).replace(/^[:：]\s*/,'').trim();
+          }
+          if(magSubTitle){
+            window._magSectionIdx++;
+            var magNum=String(window._magSectionIdx).padStart(2,'0');
+            var magLabel=window._magNextLabel||sec.tag;
+            window._magNextLabel='';
+            window._magLastUsedLabel=magLabel;
+            S+='<div data-src-idx="s'+si+'b'+bi+'" style="margin:24px 0 0;padding-top:20px">';
+            /* 라벨: 01 ─── 업종명 */
+            S+='<div style="display:table;width:100%;margin-bottom:18px">';
+            S+='<span style="display:table-cell;vertical-align:middle;font-size:11px;font-weight:800;color:#bbb;letter-spacing:2px;width:1%;white-space:nowrap;padding-right:10px">'+magNum+'</span>';
+            S+='<span style="display:table-cell;vertical-align:middle;width:100%"><span style="display:block;height:1px;background:#e0e0e0"></span></span>';
+            S+='<span style="display:table-cell;vertical-align:middle;font-size:10px;font-weight:700;letter-spacing:1.5px;color:#888;white-space:nowrap;padding-left:10px">'+esc(magLabel).toUpperCase()+'</span>';
+            S+='</div>';
+            /* 소제목 (2줄 지원) */
+            S+='<div style="font-size:22px;font-weight:900;letter-spacing:-0.5px;line-height:1.3;color:#0a0a0a;margin-bottom:6px;'+ff+'">'+magSubTitle+'</div>';
+            /* [서브]가 다음에 있으면 소제목 바로 밑에 부제목으로 삽입 */
+            if(bi+1<ai.body.length&&ai.body[bi+1]&&ai.body[bi+1].indexOf('__SUB__')===0){
+              var nextSub=ai.body[bi+1].replace('__SUB__','').trim();
+              S+='<div style="font-size:13px;color:#888;margin-bottom:20px;font-style:italic;'+ff+'">'+nextSub+'</div>';
+              bi++; /* 다음 항목 스킵 */
+            } else {
+              S+='<div style="margin-bottom:20px"></div>';
+            }
+            /* 본문 */
+            S+='<p style="font-size:15px;line-height:1.9;color:#333;margin:0 0 14px">'+magBody+'</p>';
+            S+='</div>';
+          } else {
+            /* 소제목 없는 본문 (마무리 등) */
+            S+='<p data-src-idx="s'+si+'b'+bi+'" style="font-size:15px;line-height:1.9;color:#333;margin:0 0 14px">'+bodyText+'</p>';
+          }
+        }
+      } else if(isProse){
         /* 강조 박스 — 80자 초과면 일반 본문으로 */
         if(bodyText.indexOf('__HIGHLIGHT__')===0){
           var hlText=bodyText.replace('__HIGHLIGHT__','').trim();
@@ -971,18 +1309,37 @@ function buildNL(sections){
         }
       }
       if(subTitle){
-        S+='<div data-src-idx="s'+si+'b'+bi+'" style="margin:0 0 28px">';
-        S+='<div style="font-size:18px;font-weight:700;color:#111;margin-bottom:6px;'+ff+'">'+esc(subTitle)+'</div>';
-        if(bodyContent)S+='<p style="color:#222;margin:0;font-size:16px;line-height:1.8">'+bodyContent+'</p>';
-        S+='</div>';
+        if(isStory){
+          /* 스토리텔링형: 카드 스타일 — 소제목 배너 + 본문 */
+          S+='<div data-src-idx="s'+si+'b'+bi+'" style="margin:0 0 24px;border:1.5px solid #ebebeb;border-radius:12px;overflow:hidden">';
+          S+='<div style="background:#FBFBFF;color:#3B48CC;font-size:15px;font-weight:800;padding:12px 20px;letter-spacing:-0.3px;'+ff+'">'+esc(subTitle)+'</div>';
+          if(bodyContent)S+='<div style="padding:18px 20px"><p style="color:#222;margin:0;font-size:16px;line-height:1.8">'+bodyContent+'</p></div>';
+          S+='</div>';
+        } else {
+          S+='<div data-src-idx="s'+si+'b'+bi+'" style="margin:0 0 28px">';
+          S+='<div style="font-size:18px;font-weight:700;color:#111;margin-bottom:6px;'+ff+'">'+esc(subTitle)+'</div>';
+          if(bodyContent)S+='<p style="color:#222;margin:0;font-size:16px;line-height:1.8">'+bodyContent+'</p>';
+          S+='</div>';
+        }
       } else {
-        S+='<p data-src-idx="s'+si+'b'+bi+'" style="color:#222;margin:0 0 12px;font-size:16px;line-height:1.8">'+bodyText+'</p>';
+        if(isStory){
+          /* 스토리텔링형: 소제목 없는 본문 (마무리 등) — 카드 없이 */
+          S+='<p data-src-idx="s'+si+'b'+bi+'" style="color:#222;margin:0 0 16px;font-size:16px;line-height:1.8">'+bodyText+'</p>';
+        } else {
+          S+='<p data-src-idx="s'+si+'b'+bi+'" style="color:#222;margin:0 0 12px;font-size:16px;line-height:1.8">'+bodyText+'</p>';
+        }
       }
       } /* end isProse else */
     }
 
-    /* 인사이트 요약 박스 */
-    if(ai.insightBox){
+    /* 매거진형: 섹션 끝에 "OO 업종 전체 데이터 확인하기" 링크 */
+    if(isMagazine&&sec.url){
+      var magLinkLabel=window._magLastUsedLabel||sec.tag;
+      S+='<a href="'+esc(sec.url)+'" target="_blank" style="display:inline-block;margin-top:14px;font-size:12px;font-weight:700;color:#0a0a0a !important;text-decoration:none !important;border-bottom:1.5px solid #0a0a0a;padding-bottom:1px;letter-spacing:0.5px"><span style="color:#0a0a0a">'+esc(magLinkLabel)+' 업종 전체 데이터 확인하기 →</span></a>';
+    }
+
+    /* 인사이트 요약 박스 — 매거진형에서는 제외 */
+    if(ai.insightBox&&!isMagazine){
       if(isProse){
         /* 줄글형 → 📂 더 자세히 알아보기 */
         S+='<div data-el="box" contenteditable="inherit" style="background-color:#FBFBFF;border:1px solid #E5E7EB;border-left:4px solid #3B48CC;border-radius:0 12px 12px 0;padding:20px 24px;margin:20px 0;color:#222;'+ff+'">';
@@ -1210,7 +1567,22 @@ function stibeeHTML(){
   clone.querySelectorAll('a').forEach(function(el){
     if(!el.textContent.trim()&&!el.querySelector('img'))el.remove();
   });
+  /* 3. 링크 색상 강제 적용 — 이메일 클라이언트가 파란색으로 덮어씌우는 것 방지 */
+  clone.querySelectorAll('a').forEach(function(el){
+    if(!el.style.color)el.style.color='#0a0a0a';
+    el.style.textDecoration='none';
+  });
+  /* 4. 섹션 래퍼 margin/padding 정리 */
+  clone.querySelectorAll('[data-section]').forEach(function(el){
+    el.style.margin='0';
+    el.style.padding='0';
+    el.removeAttribute('data-section');
+    el.removeAttribute('data-track-url');
+  });
   /* 불필요한 속성 정리 (HTML 크기 줄이기) */
+  /* 매거진형 삭제 버튼 제거 (클래스 제거 전에 먼저!) */
+  clone.querySelectorAll('.mag-stat-del').forEach(function(el){el.remove();});
+  clone.querySelectorAll('.mag-stat-box').forEach(function(el){el.classList.remove('mag-stat-box');});
   clone.querySelectorAll('[class]').forEach(function(el){el.removeAttribute('class');});
   clone.querySelectorAll('[tabindex]').forEach(function(el){el.removeAttribute('tabindex');});
   clone.querySelectorAll('[spellcheck]').forEach(function(el){el.removeAttribute('spellcheck');});
@@ -1368,6 +1740,14 @@ qsa('.ep-fmt[data-cmd]').forEach(function(btn){
           else{var wrap=document.createElement('div');wrap.style.textAlign=align;btnEl.parentNode.insertBefore(wrap,btnEl);wrap.appendChild(btnEl);}
           return;
         }
+        /* 일반 텍스트 정렬: 가장 가까운 블록 요소의 textAlign 변경 */
+        var align=cmd==='justifyLeft'?'left':cmd==='justifyCenter'?'center':'right';
+        var block=node;
+        while(block&&block!==NL&&window.getComputedStyle(block).display==='inline')block=block.parentNode;
+        if(block&&block!==NL){
+          block.style.textAlign=align;
+          return;
+        }
       }
     }
     document.execCommand(cmd,false,null);
@@ -1382,13 +1762,15 @@ on('#font-size','change',function(e){
     /* 선택 없으면 전체 적용 */
     NL.style.fontSize=size;
   } else {
-    var range=sel.getRangeAt(0);
-    var span=document.createElement('span');
-    span.style.fontSize=size;
-    try{range.surroundContents(span);}catch(ex){
-      var frag=range.extractContents();span.appendChild(frag);range.insertNode(span);
-    }
-    sel.removeAllRanges();var nr=document.createRange();nr.selectNodeContents(span);sel.addRange(nr);
+    /* 선택 영역에 fontSize 적용 — execCommand 방식 */
+    document.execCommand('fontSize',false,'7');
+    /* fontSize 7 → 임시 font 태그 생성됨 → span으로 교체 */
+    NL.querySelectorAll('font[size="7"]').forEach(function(font){
+      var span=document.createElement('span');
+      span.style.fontSize=size;
+      span.innerHTML=font.innerHTML;
+      font.parentNode.replaceChild(span,font);
+    });
   }
   NL.focus();
 });
@@ -2239,7 +2621,7 @@ NL.addEventListener('keydown',function(e){
       if(rBS.collapsed&&rBS.startOffset===0){
         var nodeBS=rBS.startContainer;
         var elBS=nodeBS.nodeType===3?nodeBS.parentElement:nodeBS;
-        if(elBS.hasAttribute&&elBS.hasAttribute('data-section')){e.preventDefault();return;}
+        /* 섹션 경계 백스페이스 — 허용 (편집 자유도 우선) */
       }
     }
     /* Backspace 처리 후 커서가 <strong>/<b> 경계로 빠졌으면 바깥으로 이동 */
@@ -2523,9 +2905,11 @@ genBtn.addEventListener('click',function(){
     var titleCandidates=[];
     if(sections[0]&&sections[0].ai){
       var ai0=sections[0].ai;
-      if(ai0.title)titleCandidates.push({label:'🎯 기본',text:ai0.title});
-      if(ai0.titleB)titleCandidates.push({label:'📊 데이터',text:ai0.titleB});
-      if(ai0.titleC)titleCandidates.push({label:'🔥 클릭유도',text:ai0.titleC});
+      if(ai0.title)titleCandidates.push({label:'🎯 호기심 갭',text:ai0.title});
+      if(ai0.titleB)titleCandidates.push({label:'📊 숫자 충격',text:ai0.titleB});
+      if(ai0.titleC)titleCandidates.push({label:'🤔 질문/반전',text:ai0.titleC});
+      if(ai0.titleD)titleCandidates.push({label:'⚠️ 손실회피',text:ai0.titleD});
+      if(ai0.titleE)titleCandidates.push({label:'💬 대화체',text:ai0.titleE});
     }
     saveHist(cleanBr(sections[0].ai.title||'뉴스레터'),result.tag,result.html,titleCandidates);
     /* URL 칩을 우측 패널에 표시 */
@@ -2545,9 +2929,11 @@ function populateTitleCandidates(sections){
   var btn=qs('#title-pick-btn');
   if(!ai||!ai.title){if(btn)btn.style.display='none';return;}
   _titleCandidates=[
-    {label:'기본',text:ai.title},
-    {label:'데이터 중심',text:ai.titleB||''},
-    {label:'클릭 유도',text:ai.titleC||''}
+    {label:'🎯 호기심 갭',text:ai.title},
+    {label:'📊 숫자 충격',text:ai.titleB||''},
+    {label:'🤔 질문/반전',text:ai.titleC||''},
+    {label:'⚠️ 손실회피',text:ai.titleD||''},
+    {label:'💬 대화체',text:ai.titleE||''}
   ].filter(function(t){return t.text;});
   if(btn)btn.style.display='';
   renderTitleDropdown(0); /* 첫 번째를 현재 적용 상태로 */
